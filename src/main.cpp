@@ -46,6 +46,7 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "fos/settings/FosSettings.h"
+#include "fos/sync/Sync.h"
 #include "fos/ui/Fonts.h"
 #include "platform/UsbSerialJtagHandoff.h"
 #include "util/ButtonNavigator.h"
@@ -836,6 +837,9 @@ void setup() {
     delay(10);
     gpio.update();
   }
+
+  // FOs: background sync worker; with auto-sync on it also syncs once at boot.
+  if (!recoveryFirmwareMode) fos::sync::begin();
 
   allowSleepAt = millis() + 2000;
 }

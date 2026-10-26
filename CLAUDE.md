@@ -136,6 +136,8 @@ relevant scenarios and look at the PNGs before committing.**
   Settings can never be hidden.
 - **Sync** (`src/fos/sync/`): one HTTP backend (address + key from Settings > Accounts).
   Each app caches its last copy under `/fos/<app>/`. Budgeteer keeps an offline queue.
+  `sync::begin()` runs at the end of `setup()`; screens reload caches when
+  `sync::generation()` changes.
 
 ## Conventions
 

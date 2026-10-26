@@ -2,6 +2,7 @@
 
 #include <HalStorage.h>
 #include <Logging.h>
+#include <WiFi.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
@@ -11,6 +12,7 @@
 #include <mutex>
 
 #include "Backend.h"
+#include "fos/core/Json.h"
 #include "fos/core/Status.h"
 #include "fos/core/Storage.h"
 #include "fos/settings/FosSettings.h"
@@ -38,8 +40,8 @@ constexpr Pull PULLS[] = {
 };
 
 struct Job {
-  AppId app;           // AppId::Count = everything
-  std::string path;    // set for a single fetch
+  AppId app;         // AppId::Count = everything
+  std::string path;  // set for a single fetch
   std::string cache;
 };
 
@@ -49,7 +51,23 @@ TaskHandle_t worker = nullptr;
 std::atomic<bool> running{false};
 std::atomic<uint32_t> gen{0};
 std::atomic<bool> online{false};
+std::atomic<uint32_t> lastOk{0};
 Pusher pushers[APP_COUNT] = {};
+
+// Kept apart from /fos/settings.json so the worker never writes the settings
+// object that screens edit on the main task.
+constexpr char STATE_FILE[] = "/fos/sync/state.json";
+
+void loadState() {
+  JsonDocument doc;
+  if (loadJson(STATE_FILE, doc)) lastOk = doc["lastSync"] | 0u;
+}
+
+void saveState() {
+  JsonDocument doc;
+  doc["lastSync"] = lastOk.load();
+  if (!saveJson(STATE_FILE, doc)) LOG_ERR("SYNC", "Cannot write %s", STATE_FILE);
+}
 
 bool pushAll(const AppId only) {
   for (int i = 0; i < APP_COUNT; ++i) {
@@ -83,14 +101,17 @@ void runJob(const Job& job) {
     all = fetchToCache(pull.path, cachePath(pull.app, pull.cacheName)) && all;
   }
   if (all && job.app == AppId::Count) {
-    settings().lastSync = static_cast<uint32_t>(std::time(nullptr));
-    settings().save();
+    lastOk = static_cast<uint32_t>(std::time(nullptr));
+    saveState();
   }
 }
 
 void workerLoop(void*) {
   for (;;) {
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    // Wi-Fi is only for syncing: leave it as it was found (the web server or
+    // a live app may be using it).
+    const bool wasConnected = WiFi.status() == WL_CONNECTED;
     for (;;) {
       Job job;
       {
@@ -106,6 +127,7 @@ void workerLoop(void*) {
       running = false;
       gen++;
     }
+    if (!wasConnected) net::wifiOff();
   }
 }
 
@@ -124,6 +146,7 @@ void enqueue(Job job) {
 }  // namespace
 
 void begin() {
+  loadState();
   if (!worker) xTaskCreate(workerLoop, "fos-sync", 12 * 1024, nullptr, 1, &worker);
   if (settings().autoSync && !settings().batterySaver) request();
 }
@@ -145,14 +168,14 @@ uint32_t generation() { return gen.load(); }
 
 bool lastRunOnline() { return online.load(); }
 
+uint32_t lastSyncTime() { return lastOk.load(); }
+
 void setPusher(const AppId app, const Pusher pusher) {
   const int i = static_cast<int>(app);
   if (i >= 0 && i < APP_COUNT) pushers[i] = pusher;
 }
 
-std::string cachePath(const AppId app, const char* name) {
-  return std::string(appFolder(app)) + "/" + name + ".json";
-}
+std::string cachePath(const AppId app, const char* name) { return std::string(appFolder(app)) + "/" + name + ".json"; }
 
 bool fetchToCache(const std::string& path, const std::string& cacheFile) {
   const net::Response r = net::backendGet(path);

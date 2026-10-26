@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 #include "Canvas.h"
@@ -59,6 +60,8 @@ class FosActivity : public Activity {
   bool pressFrame_ = false;  // next frame only shows a press: fast B/W refresh
   bool fullNext_ = true;     // next frame is a full refresh
   int updatesSinceFull_ = 0;
+  uint32_t syncGen_ = 0;
+  bool syncBusy_ = false;
 };
 
 }  // namespace fos::ui
