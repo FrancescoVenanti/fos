@@ -101,8 +101,11 @@ std::string masked(const std::string& secret) {
 }
 
 std::string lastSyncText() {
-  const uint32_t last = settings().lastSync;
-  if (last == 0) return "Never";
+  if (sync::busy()) return "Syncing now";
+  const uint32_t last = sync::lastSyncTime();
+  // generation() > 0: a run has finished since boot.
+  const char* prefix = sync::generation() > 0 && !sync::lastRunOnline() ? "Offline. Last: " : "";
+  if (last == 0) return std::string(prefix) + "Never";
   const std::time_t t = last;
   std::tm tm{};
   localtime_r(&t, &tm);
@@ -110,7 +113,7 @@ std::string lastSyncText() {
   char clock[12];
   formatDate(tm, date, sizeof(date));
   formatClock(tm, clock, sizeof(clock));
-  return std::string(date) + "  " + clock;
+  return std::string(prefix) + date + "  " + clock;
 }
 
 }  // namespace
@@ -722,6 +725,12 @@ void SettingsActivity::onBack() {
 }
 
 void SettingsActivity::onTick() {
+  // "Last sync" follows the sync worker while the Wi-Fi page is open.
+  if (page_ == Page::Wifi && sync::generation() != syncGen_) {
+    syncGen_ = sync::generation();
+    rebuild();
+    requestUpdate();
+  }
   // Keep the battery level fresh while the Power page is open.
   if (page_ == Page::Power && millis() - lastBatteryAt_ > 30000) {
     lastBatteryAt_ = millis();

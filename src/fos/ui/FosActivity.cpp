@@ -7,6 +7,7 @@
 #include "activities/ActivityManager.h"
 #include "activities/RenderLock.h"
 #include "fos/settings/FosSettings.h"
+#include "fos/sync/Sync.h"
 
 namespace fos::ui {
 namespace {
@@ -26,6 +27,8 @@ FosActivity::FosActivity(std::string name, GfxRenderer& renderer, MappedInputMan
 void FosActivity::onEnter() {
   Activity::onEnter();
   fullNext_ = true;
+  syncGen_ = sync::generation();
+  syncBusy_ = sync::busy();
   requestUpdate();
 }
 
@@ -61,6 +64,15 @@ void FosActivity::loop() {
   // Activity state is read by the render task; mutate it under the render lock.
   RenderLock lock(*this);
   onTick();
+
+  // Repaint the status bar when a sync starts or ends.
+  const uint32_t syncGen = sync::generation();
+  const bool syncBusy = sync::busy();
+  if (syncGen != syncGen_ || syncBusy != syncBusy_) {
+    syncGen_ = syncGen;
+    syncBusy_ = syncBusy;
+    refresh();
+  }
 
   if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
     onBack();

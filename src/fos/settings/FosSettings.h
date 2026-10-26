@@ -38,7 +38,6 @@ struct FosSettings {
   // Wi-Fi and sync. Saved networks live in CrossPoint's WifiCredentialStore
   // (/.crosspoint/wifi.json, passwords obfuscated); their order is the priority.
   bool autoSync = true;
-  uint32_t lastSync = 0;  // unix time of the last successful sync, 0 = never
 
   // Accounts
   std::string lichessToken;

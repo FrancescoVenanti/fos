@@ -103,7 +103,6 @@ bool FosSettings::load() {
   lockShowNextEvent = doc["lock"]["nextEvent"] | true;
 
   autoSync = doc["sync"]["auto"] | true;
-  lastSync = doc["sync"]["last"] | 0u;
 
   lichessToken = doc["accounts"]["lichessToken"] | "";
   backendUrl = doc["accounts"]["backendUrl"] | "http://127.0.0.1:8787";
@@ -153,7 +152,6 @@ bool FosSettings::save() const {
 
   JsonObject sync = doc["sync"].to<JsonObject>();
   sync["auto"] = autoSync;
-  sync["last"] = lastSync;
 
   JsonObject accounts = doc["accounts"].to<JsonObject>();
   accounts["lichessToken"] = lichessToken.c_str();

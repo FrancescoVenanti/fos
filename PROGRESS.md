@@ -34,8 +34,10 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] Settings app (all sections from the spec), persisted on SD, never hideable
 
 ## Phase 6 — Mock backend
-- [ ] `tools/mock-backend` (Python stdlib) for every row of the sync table
-- [ ] Backend address in Settings > Accounts; online/offline tested
+- [x] `tools/mock-backend` (Python stdlib) for every row of the sync table, with tests
+- [x] Sync service (`src/fos/sync/`): worker task, push then pull, per-app caches, started at boot
+- [x] Backend address and key in Settings > Accounts; sync now / last sync in Settings > Wi-Fi and sync
+- [ ] Online/offline tested in the simulator (not built yet: needs the Windows host)
 
 ## Phase 7 — Apps
 - [ ] Budgeteer (offline queue, 6-step entry, month view)

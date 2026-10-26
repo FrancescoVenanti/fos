@@ -24,6 +24,8 @@ bool busy();
 uint32_t generation();
 // Outcome of the last run: true if the backend answered.
 bool lastRunOnline();
+// Unix time of the last complete sync, 0 = never.
+uint32_t lastSyncTime();
 
 // Apps that send data register a pusher; it runs before any download and
 // returns false if the backend could not be reached.

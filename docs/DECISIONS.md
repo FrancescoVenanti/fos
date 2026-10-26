@@ -119,3 +119,11 @@ entirely (settings and all FOs data); books and CrossPoint's reader caches stay.
 `ActivityManager::goHome()` now shows the FOs launcher; CrossPoint's HomeActivity is
 unused. Apps open on top of the launcher (`pushActivity`), so Back returns to it.
 On the launcher, Up/Down and horizontal swipes turn pages and OK goes to the next page.
+
+## D16 — Sync runs on its own task and owns its state
+`fos::sync` runs on a FreeRTOS worker (12 KB stack) so screens never block on the
+network. Each run first sends queued data (apps register a pusher), then downloads
+into `/fos/<app>/cache*.json`. The last-sync time lives in `/fos/sync/state.json`, not
+in `/fos/settings.json`, so the worker never writes the settings object that screens
+edit on the main task. If a run had to turn Wi-Fi on, it turns it off again when the
+queue is empty; if Wi-Fi was already on (web server, a live app) it is left on.
