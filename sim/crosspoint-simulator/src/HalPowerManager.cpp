@@ -10,6 +10,7 @@ void HalPowerManager::startDeepSleep(HalGPIO &gpio,
                                      bool wakeOnHeldButton) const {
   if (wakeOnHeldButton)
     SimulatorLifecycle::rebootAsPowerWake();
+  SimulatorLifecycle::armWakeTimer(wakeTimerSeconds);
   gpio.startDeepSleep();
 }
 #if FREEINK_DEVICE_PICCO

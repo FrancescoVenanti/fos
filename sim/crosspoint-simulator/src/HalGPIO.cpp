@@ -927,9 +927,13 @@ bool HalGPIO::consumeSimulatorSleepRequest() {
 }
 
 HalGPIO::WakeupReason HalGPIO::getWakeupReason() const {
-  if (SimulatorLifecycle::consumeWakeReason() ==
-      SimulatorLifecycle::WakeReason::PowerButton) {
-    return WakeupReason::PowerButton;
+  switch (SimulatorLifecycle::consumeWakeReason()) {
+    case SimulatorLifecycle::WakeReason::PowerButton:
+      return WakeupReason::PowerButton;
+    case SimulatorLifecycle::WakeReason::Timer:
+      return WakeupReason::Timer;
+    case SimulatorLifecycle::WakeReason::None:
+      break;
   }
   return WakeupReason::Other;
 }
@@ -940,8 +944,14 @@ void HalGPIO::startDeepSleep() {
 
   while (true) {
     processSyntheticEvents();
+    // FOs: scheduled screenshots are taken while asleep too (the sleep frame).
+    display.presentIfNeeded();
     if (quitRequested.load())
       return;
+    if (SimulatorLifecycle::wakeTimerDue()) {
+      clearButtonState();
+      SimulatorLifecycle::rebootAsTimerWake();
+    }
     for (int button = 0; button < NUM_BUTTONS; button++) {
       if (syntheticButtonDown[button]) {
         clearButtonState();

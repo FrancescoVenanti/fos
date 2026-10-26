@@ -1,6 +1,7 @@
 #include "SimulatorLifecycle.h"
 #include "HalGPIO.h"
 
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -50,16 +51,46 @@ WakeReason consumeWakeReason() {
   if (std::strcmp(value, "power") == 0) {
     return WakeReason::PowerButton;
   }
+  if (std::strcmp(value, "timer") == 0) {
+    return WakeReason::Timer;
+  }
   return WakeReason::None;
 }
 
-[[noreturn]] void rebootAsPowerWake() {
+namespace {
+// FOs: deadline of the timed wake.
+std::chrono::steady_clock::time_point wakeTimerDeadline{};
+bool wakeTimerArmed = false;
+
+[[noreturn]] void reboot(const char *reason);
+} // namespace
+
+void armWakeTimer(const unsigned long seconds) {
+  const char *override = std::getenv("FOS_SIM_WAKE_TIMER_MS");
+  wakeTimerArmed = seconds > 0 && override && *override;
+  if (wakeTimerArmed)
+    wakeTimerDeadline =
+        std::chrono::steady_clock::now() +
+        std::chrono::milliseconds(std::strtoul(override, nullptr, 10));
+}
+
+bool wakeTimerDue() {
+  return wakeTimerArmed &&
+         std::chrono::steady_clock::now() >= wakeTimerDeadline;
+}
+
+[[noreturn]] void rebootAsTimerWake() { reboot("timer"); }
+
+[[noreturn]] void rebootAsPowerWake() { reboot("power"); }
+
+namespace {
+[[noreturn]] void reboot(const char *reason) {
   if (!gArgv || !gArgv[0]) {
     std::fputs("SimulatorLifecycle: missing argv for reboot\n", stderr);
     _exit(1);
   }
 
-  setenv(kWakeReasonEnv, "power", 1);
+  setenv(kWakeReasonEnv, reason, 1);
   // Retain the physical switch level when the host relaunches after sleep.
   if (gpio.hasToggleSwitch())
     setenv("CROSSPOINT_SIM_SLIDE_SWITCH",
@@ -90,5 +121,6 @@ WakeReason consumeWakeReason() {
 #endif
   _exit(1);
 }
+} // namespace
 
 } // namespace SimulatorLifecycle

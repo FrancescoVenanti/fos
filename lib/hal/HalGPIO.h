@@ -136,7 +136,8 @@ class HalGPIO {
   // Returns true once per edge (plug or unplug) since the last update()
   bool wasUsbStateChanged() const;
 
-  enum class WakeupReason { PowerButton, AfterFlash, AfterUSBPower, Other };
+  // FOs: Timer = the lock screen's timed wake (HalPowerManager::setWakeTimer).
+  enum class WakeupReason { PowerButton, AfterFlash, AfterUSBPower, Timer, Other };
 
   WakeupReason getWakeupReason() const;
 

@@ -44,7 +44,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] To-do (lists, due dates, recurring tasks, tap-to-complete)
 - [ ] Chess (vs bot, 1v1, Lichess (mocked), blindfold trainer)
 - [ ] Reader (CrossPoint)
-- [ ] Lock screen
+- [x] Lock screen (clock styles, weather, room climate, next event; sleep screen with timed refresh)
 - [ ] Timers
 - [ ] Calculator
 - [ ] Notes and sketch
@@ -68,3 +68,4 @@ Static RAM is of the 320 KB internal DRAM (8 MB PSRAM not counted); flash is of 
 | 7 (Budgeteer) | 79,012 B (24.1%) | 5,459,779 B (83.3%) |
 | 7 (To-do) | 79,052 B (24.1%) | 5,479,711 B (83.6%) |
 | 7 (Calendar) | 79,052 B (24.1%) | 5,490,155 B (83.8%) |
+| 7 (Lock screen) | 79,068 B (24.1%) | 5,503,527 B (84.0%) |

@@ -107,7 +107,7 @@ public:
   bool wasUsbStateChanged() const;
   void pollUsbState() {}
 
-  enum class WakeupReason { PowerButton, AfterFlash, AfterUSBPower, Other };
+  enum class WakeupReason { PowerButton, AfterFlash, AfterUSBPower, Timer, Other };
 
   WakeupReason getWakeupReason() const;
 

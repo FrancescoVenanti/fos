@@ -1,0 +1,12 @@
+{
+  "description": "Lock screen app: digital clock, weather, room climate, next event; a tap closes it",
+  "sd": ["calendar-cache", "lock-weather", "backend-down"],
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [123, 640]},
+    {"wait": 4000},
+    {"shot": "lock"},
+    {"tap": [240, 400]},
+    {"shot": "closed"}
+  ]
+}

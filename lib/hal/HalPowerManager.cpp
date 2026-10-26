@@ -140,6 +140,9 @@ void HalPowerManager::startDeepSleep(HalGPIO& gpio, const bool wakeOnHeldButton)
   // guarantees that ordering).
   freeink::PowerManager::powerDownRailsForSleep();
 
+  // FOs: timed wake (lock screen refresh) next to the power-button wake.
+  if (wakeTimerSeconds > 0) esp_sleep_enable_timer_wakeup(static_cast<uint64_t>(wakeTimerSeconds) * 1000000ULL);
+
 #if FREEINK_DEVICE_PAPERMONO
   // Its power button is behind the M5PM1 PMIC rather than an ESP GPIO, so
   // normal GPIO deep sleep would have no wake source. Ask the PMIC to shut the

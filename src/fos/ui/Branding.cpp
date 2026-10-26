@@ -56,12 +56,4 @@ void drawBootScreen(const GfxRenderer& renderer, const char* status) {
   renderer.displayBuffer(HalDisplay::HALF_REFRESH);
 }
 
-void drawSleepScreen(const GfxRenderer& renderer) {
-  renderer.clearScreen();
-  Canvas c(renderer, Pass::Bw, false, nullptr, 0, 0);
-  const int bottom = wordmarkCard(renderer, c, c.width() / 2, c.height() / 2 - 40);
-  c.textIn({0, bottom + 24, c.width(), 40}, font::BODY, "Sleeping. Press OK to wake.", Tone::Black, Align::Center,
-           true);
-}
-
 }  // namespace fos::ui

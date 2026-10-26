@@ -129,6 +129,28 @@ void Canvas::text(const int fontId, const int x, const int y, const char* text, 
   renderer_.drawText(fontId, x, y, text, ink(tone), style(bold));
 }
 
+int Canvas::scaledWidth(const int fontId, const char* text, const int scale256) const {
+  int width = 0;
+  for (const char* p = text; p && *p; ++p) {
+    int32_t advance = 0;
+    int top = 0;
+    if (renderer_.getCodepointMetrics(fontId, static_cast<uint8_t>(*p), EpdFontFamily::REGULAR, advance, top)) {
+      width += static_cast<int>(advance * scale256 / 256 / 16);
+    }
+  }
+  return width;
+}
+
+int Canvas::scaledText(const int fontId, const int x, const int baseline, const char* text, const int scale256) {
+  const bool black = ink(Tone::Black);
+  int cx = x;
+  for (const char* p = text; p && *p; ++p) {
+    cx += renderer_.drawScaledCodepoint(fontId, static_cast<uint8_t>(*p), EpdFontFamily::REGULAR, cx, baseline,
+                                        scale256, black);
+  }
+  return cx - x;
+}
+
 void Canvas::textIn(const Rect& rect, const int fontId, const char* text, const Tone tone, const Align align,
                     const bool bold) {
   if (!text || !*text || rect.w <= 0) return;

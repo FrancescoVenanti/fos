@@ -1,0 +1,13 @@
+{
+  "description": "Lock screen app: analog clock, 12-hour clock, no climate card, old weather copy",
+  "sd": ["calendar-cache", "lock-old-weather", "lock-analog"],
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [123, 640]},
+    {"wait": 4000},
+    {"shot": "analog"},
+    {"key": "SLEEP"},
+    {"wait": 1500},
+    {"shot": "analog-asleep"}
+  ]
+}

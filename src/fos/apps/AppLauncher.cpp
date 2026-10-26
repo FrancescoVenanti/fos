@@ -6,6 +6,7 @@
 #include "fos/apps/budgeteer/BudgetStore.h"
 #include "fos/apps/budgeteer/BudgeteerActivity.h"
 #include "fos/apps/calendar/CalendarActivity.h"
+#include "fos/apps/lock/LockScreenActivity.h"
 #include "fos/apps/todo/TodoActivity.h"
 #include "fos/launcher/LauncherActivity.h"
 #include "fos/settings/SettingsActivity.h"
@@ -54,6 +55,9 @@ void openApp(const AppId id) {
       break;
     case AppId::Calendar:
       app = std::make_unique<calendar::CalendarActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::LockScreen:
+      app = std::make_unique<lock::LockScreenActivity>(renderer, mappedInputManager);
       break;
     case AppId::Settings:
       app = std::make_unique<SettingsActivity>(renderer, mappedInputManager);

@@ -174,3 +174,25 @@ Synced copies on test SD cards must look current on any day the tests run. In ov
 the run and `{{unix±N}}` with a Unix time. `backend-8799` and `backend-down` are the
 shared overlays that point the device at the test backend or at a closed port.
 
+## D22 — The lock screen is the sleep screen
+The Lock screen is both an app and the sleep frame (CrossPoint's default sleep screen
+mode draws it; custom images, covers and Quick Resume still work as before). Before
+deep sleep, `HalPowerManager::setWakeTimer()` arms a timer wake for the next refresh
+boundary (every Settings > Lock screen interval, aligned to the clock, so a 15-minute
+interval updates at :00, :15, :30, :45; battery saver makes it hourly). A timed wake
+(`WakeupReason::Timer`) only reads the clock, sensor and cached data, redraws the frame
+with a fast refresh (a cleaning refresh every Settings > Display interval, counted in
+RTC memory) and sleeps again: no UI, no Wi-Fi, no Bluetooth. The power button wakes the
+device as before. The sleep frame is B/W only, because fast refreshes over a retained
+image cannot keep gray planes; the app version can use grays and shows seconds when
+the clock style asks for them. Weather is the synced copy (its age is shown after 3
+hours); room temperature and humidity come from the Sticky's SHT40 through a new
+`HalClimate`. Units follow Settings > Region (Celsius or Fahrenheit, decimal comma).
+
+## D23 — Simulator: timed wake and climate
+The simulator's deep sleep fires the timed wake only when `FOS_SIM_WAKE_TIMER_MS` is set
+(tests), relaunching itself with wake reason "timer", like the button wake. The sleep
+loop now presents the panel, so screenshots can be taken of the sleep frame. Scenarios
+add `after_wake` steps for the relaunched process. `FOS_SIM_CLIMATE="<C>,<RH>"` sets the
+simulated sensor, `none` removes it.
+

@@ -24,7 +24,9 @@ A scenario is tools/simtest/scenarios/<name>.json:
         {"tap": [240, 400], "hold": 1500, "shot_at": 700, "shot_name": "pressed"},
         {"wait": 2000},
         {"shot": "settings"}
-      ]
+      ],
+      "after_wake": [{"shot": "woken"}]   # optional: steps for the process a
+                                          # deep-sleep wake relaunches (ends with QUIT)
     }
 
 Each run starts from a fresh copy of tools/simtest/sd/ (plus the overlay) as
@@ -61,17 +63,17 @@ BACKEND = os.path.join(REPO, "tools", "mock-backend", "server.py")
 PROGRAM = os.path.join(REPO, ".pio", "build", "simulator", "program.exe" if os.name == "nt" else "program")
 
 
-def build_timeline(scenario, out_dir):
-    t = int(scenario.get("boot_ms", 3000))
+def build_timeline(scenario, out_dir, steps_key="steps", first_shot=1, boot_ms=3000, quit=True):
+    t = int(scenario.get("boot_ms", boot_ms))
     default_settle = int(scenario.get("settle_ms", 900))
     inputs, shots, names = [], [], []
 
     def shot_at(at, label):
-        name = "%02d-%s.png" % (len(shots) + 1, label)
+        name = "%02d-%s.png" % (first_shot + len(shots), label)
         shots.append("%d:%s" % (at, os.path.join(out_dir, name)))
         names.append(name)
 
-    for step in scenario["steps"]:
+    for step in scenario[steps_key]:
         settle = int(step.get("settle", default_settle))
         if "shot_at" in step:
             # Screenshot while this input is still in progress (e.g. a held tap).
@@ -100,7 +102,8 @@ def build_timeline(scenario, out_dir):
             t += (hold or 80) + settle
         else:
             raise ValueError("unknown step: %r" % step)
-    inputs.append("%d:QUIT" % (t + 300))
+    if quit:
+        inputs.append("%d:QUIT" % (t + 300))
     return ";".join(inputs), ";".join(shots), names, t + 300
 
 
@@ -166,7 +169,16 @@ def run(name):
         shutil.rmtree(run_dir)
     os.makedirs(run_dir)
     sd = prepare_sd(scenario, run_dir)
-    inputs, shots, names, total_ms = build_timeline(scenario, run_dir)
+    # With after_wake the first process must not quit: its deep-sleep wake starts the next one.
+    inputs, shots, names, total_ms = build_timeline(scenario, run_dir, quit=not scenario.get("after_wake"))
+    wake = None
+    if scenario.get("after_wake"):
+        # The woken simulator is a new process: its schedule starts at its own boot.
+        wake = build_timeline({"steps": scenario["after_wake"], "boot_ms": scenario.get("wake_boot_ms", 1500),
+                               "settle_ms": scenario.get("settle_ms", 900)},
+                              run_dir, first_shot=len(names) + 1)
+        names = names + wake[2]
+        total_ms += wake[3] + int(scenario.get("env", {}).get("FOS_SIM_WAKE_TIMER_MS", 0))
 
     env = os.environ.copy()
     env.update({
@@ -178,6 +190,9 @@ def run(name):
         "SDL_VIDEO_WINDOW_POS": "0,0",
     })
     env.update({k: str(v) for k, v in scenario.get("env", {}).items()})
+    if wake:
+        env["CROSSPOINT_SIM_INPUT_SCRIPT_AFTER_WAKE"] = wake[0]
+        env["CROSSPOINT_SIM_SCREENSHOTS_AFTER_WAKE"] = wake[1]
 
     backend = start_backend(int(scenario["backend"]), run_dir) if scenario.get("backend") else None
     try:

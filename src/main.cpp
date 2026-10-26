@@ -46,6 +46,7 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "fos/apps/AppLauncher.h"
+#include "fos/apps/lock/LockScreen.h"
 #include "fos/settings/FosSettings.h"
 #include "fos/sync/Sync.h"
 #include "fos/ui/Fonts.h"
@@ -512,6 +513,12 @@ void enterDeepSleep(bool fromTimeout = false) {
   const bool wakeOnHeldButton = false;
 #endif
 
+  // FOs: the lock screen is the default sleep screen; a timed wake keeps its
+  // clock current. Other sleep screens (custom image, cover, quick resume) stay put.
+  const bool lockScreenSleep = !isQuickResumeSleep && (SETTINGS.sleepScreen == CrossPointSettings::DARK ||
+                                                       SETTINGS.sleepScreen == CrossPointSettings::LIGHT);
+  powerManager.setWakeTimer(lockScreenSleep ? fos::lock::secondsToNextRefresh() : 0);
+
   halTiltSensor.deepSleep();
   display.deepSleep();
   Storage.prepareForDeepSleep();
@@ -691,6 +698,21 @@ void setup() {
   // Restore the monotonic clock floor before anything reads time() (event
   // timestamps, loan-expiry checks).
   trustedtime::init();
+
+  // FOs: a timed wake only redraws the lock screen and sleeps again, without
+  // starting the UI, Wi-Fi or Bluetooth.
+  if (wakeupReason == HalGPIO::WakeupReason::Timer) {
+    LOG_DBG("MAIN", "Timed wake: refreshing the lock screen");
+    setupDisplayAndFonts(true);
+    fos::lock::refreshWhileAsleep(renderer);
+    halTiltSensor.deepSleep();
+    display.deepSleep();
+    Storage.prepareForDeepSleep();
+    powerManager.setWakeTimer(fos::lock::secondsToNextRefresh());
+    powerManager.startDeepSleep(gpio);
+    return;  // the simulator returns here when it quits
+  }
+
   bleturner::begin(pageturner::host, SETTINGS.ble);
 
   // Brightness and warmth are always restored. A normal wake starts with the

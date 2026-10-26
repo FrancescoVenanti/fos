@@ -26,7 +26,7 @@
 #include "activities/reader/ReaderUtils.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
-#include "fos/ui/Branding.h"
+#include "fos/apps/lock/LockScreen.h"
 #include "images/Logo120.h"
 #include "images/MoonIcon.h"
 
@@ -707,10 +707,10 @@ void SleepActivity::renderDefaultSleepScreen() const {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  // FOs: branded sleep screen (the Lock screen app replaces it once enabled).
+  // FOs: the lock screen is the sleep screen (refreshed by a timed wake).
   (void)pageWidth;
   (void)pageHeight;
-  fos::ui::drawSleepScreen(renderer);
+  fos::lock::drawSleepFrame(renderer);
   renderer.displayBuffer(kSleepClean);
 }
 

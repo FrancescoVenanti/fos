@@ -82,7 +82,12 @@ key wakes the device (the simulator relaunches itself as a child process).
 `CROSSPOINT_SIM_INPUT_SCRIPT` (`<ms>:<action>;...`, actions `TAP:x,y`, `SWIPE:x1,y1,x2,y2`,
 `UP`, `DOWN`, `ENTER`, `BACK`, `HOME`, `POWER`, `QUIT`) and `CROSSPOINT_SIM_SCREENSHOTS`
 (`<ms>:<path>.png;...`). Scenarios are JSON files in `tools/simtest/scenarios/`; each run
-uses a fresh copy of `tools/simtest/sd/` as the SD card. **After any UI change, run the
+uses a fresh copy of `tools/simtest/sd/` as the SD card, plus the overlays named in `sd`
+(`{{date+N}}` / `{{unix-N}}` in overlay JSON are replaced with run-relative values).
+`"backend": 8799` runs the mock backend for the scenario (overlay `backend-8799`;
+`backend-down` points at a closed port). `after_wake` steps run in the process a
+deep-sleep wake relaunches; `FOS_SIM_WAKE_TIMER_MS` makes the lock screen's timed wake
+fire, and `FOS_SIM_CLIMATE="21.4,47"` (or `none`) sets the room sensor. **After any UI change, run the
 relevant scenarios and look at the PNGs before committing.**
 
 ## Architecture (CrossPoint core)

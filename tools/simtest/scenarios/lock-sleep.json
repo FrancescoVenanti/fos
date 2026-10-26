@@ -1,0 +1,14 @@
+{
+  "description": "Sleep shows the lock screen; a timed wake redraws it and sleeps again without the UI",
+  "sd": ["calendar-cache", "lock-weather", "backend-down"],
+  "env": {"FOS_SIM_WAKE_TIMER_MS": 3000, "FOS_SIM_CLIMATE": "22.8,51"},
+  "steps": [
+    {"key": "SLEEP"},
+    {"wait": 1500},
+    {"shot": "asleep"}
+  ],
+  "after_wake": [
+    {"shot": "after-timed-wake"},
+    {"wait": 500}
+  ]
+}

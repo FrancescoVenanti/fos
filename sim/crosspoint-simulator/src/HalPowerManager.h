@@ -14,6 +14,7 @@ extern HalPowerManager powerManager; // Singleton
 
 class HalPowerManager {
   int normalFreq = 0; // MHz
+  uint32_t wakeTimerSeconds = 0;
   bool isLowPower = false;
 
   enum LockMode { None, NormalSpeed };
@@ -46,6 +47,8 @@ public:
   // Setup wake up GPIO and enter deep sleep
   // Should be called inside main loop() to handle the currentLockMode
   void startDeepSleep(HalGPIO &gpio, bool wakeOnHeldButton = false) const;
+  // FOs: timed wake (lock screen). See SimulatorLifecycle::armWakeTimer().
+  void setWakeTimer(uint32_t seconds) { wakeTimerSeconds = seconds; }
 
 #if FREEINK_DEVICE_PICCO
   bool holdWhileUsbPowered(HalGPIO &gpio,

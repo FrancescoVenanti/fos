@@ -1,0 +1,10 @@
+{
+  "description": "Lock screen with no synced data and no sensor",
+  "sd": "backend-down",
+  "env": {"FOS_SIM_CLIMATE": "none"},
+  "steps": [
+    {"key": "SLEEP"},
+    {"wait": 1500},
+    {"shot": "asleep-empty"}
+  ]
+}
