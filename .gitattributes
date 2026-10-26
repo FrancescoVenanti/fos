@@ -1,0 +1,4 @@
+# FOs: patch files must keep LF endings on Windows clones (core.autocrlf),
+# or `git apply` rejects them against the LF library sources.
+*.patch text eol=lf
+*.sh text eol=lf

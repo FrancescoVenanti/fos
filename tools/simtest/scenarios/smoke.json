@@ -1,0 +1,11 @@
+{
+  "description": "Boot to the home screen, scroll, and sleep/wake",
+  "steps": [
+    {"shot": "home"},
+    {"key": "DOWN"},
+    {"shot": "after-down"},
+    {"key": "SLEEP"},
+    {"wait": 1500},
+    {"shot": "sleep"}
+  ]
+}

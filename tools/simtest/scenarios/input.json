@@ -1,0 +1,12 @@
+{
+  "description": "Touch tap opens a screen; BACK (Esc) and HOME (H) send the Sticky edge gestures",
+  "steps": [
+    {"tap": [120, 562]},
+    {"shot": "tapped"},
+    {"key": "BACK"},
+    {"shot": "after-back"},
+    {"tap": [120, 562]},
+    {"key": "HOME"},
+    {"shot": "after-home"}
+  ]
+}
