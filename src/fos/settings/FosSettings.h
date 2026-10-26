@@ -41,6 +41,7 @@ struct FosSettings {
 
   // Accounts
   std::string lichessToken;
+  std::string lichessUrl = "https://lichess.org";  // a test server can stand in (tools/mock-backend /lichess)
   std::string backendUrl = "http://127.0.0.1:8787";
   std::string backendKey;
 

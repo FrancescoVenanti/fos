@@ -1,0 +1,18 @@
+{
+  "description": "Reader: continue reading card, recent books, open a book, turn a page, Back turns back a page, Home leaves",
+  "sd": ["reader-books", "reader-recent"],
+  "steps": [
+    {"tap": [123, 485]},
+    {"shot": "home"},
+    {"tap": [240, 230], "settle": 4000},
+    {"shot": "book"},
+    {"key": "DOWN", "settle": 1500},
+    {"shot": "page-2"},
+    {"key": "BACK", "settle": 1500},
+    {"shot": "page-back"},
+    {"key": "HOME", "settle": 1500},
+    {"shot": "launcher"},
+    {"tap": [123, 485]},
+    {"shot": "home-again"}
+  ]
+}

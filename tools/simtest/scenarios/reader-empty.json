@@ -1,0 +1,10 @@
+{
+  "description": "Reader with no books opened yet; Library lists the books on the card",
+  "sd": "reader-books",
+  "steps": [
+    {"tap": [123, 485]},
+    {"shot": "empty"},
+    {"tap": [123, 746], "settle": 3000},
+    {"shot": "library"}
+  ]
+}

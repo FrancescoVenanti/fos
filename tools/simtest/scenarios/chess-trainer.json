@@ -1,0 +1,15 @@
+{
+  "description": "Chess blindfold trainer: square color drill, find-the-square drill",
+  "sd": "backend-down",
+  "steps": [
+    {"tap": [353, 640]},
+    {"tap": [240, 409]},
+    {"shot": "color"},
+    {"tap": [125, 596]},
+    {"shot": "color-answered"},
+    {"tap": [354, 227]},
+    {"shot": "find"},
+    {"tap": [100, 400]},
+    {"shot": "find-answered"}
+  ]
+}

@@ -53,6 +53,7 @@ enum Id : uint8_t {
   SYNC_NOW,
   LAST_SYNC,
   LICHESS,
+  LICHESS_URL,
   BACKEND_URL,
   BACKEND_KEY,
   SWAP_BUTTONS,
@@ -262,6 +263,7 @@ void SettingsActivity::rebuild() {
 
     case Page::Accounts:
       addNav(LICHESS, "Lichess API token", masked(s.lichessToken));
+      addNav(LICHESS_URL, "Lichess server", s.lichessUrl);
       addNav(BACKEND_URL, "Backend address", s.backendUrl.empty() ? "Not set" : s.backendUrl);
       addNav(BACKEND_KEY, "Backend key", masked(s.backendKey));
       break;
@@ -599,6 +601,9 @@ void SettingsActivity::activate(const int index) {
       editText(LICHESS, "Lichess API token", s.lichessToken, true,
                "Create a personal token at lichess.org/account/oauth/token. Stored only on this device.");
       return;
+    case LICHESS_URL:
+      editText(LICHESS_URL, "Lichess server", s.lichessUrl, false, "Normally https://lichess.org");
+      return;
     case BACKEND_URL:
       editText(BACKEND_URL, "Backend address", s.backendUrl, false, "For example http://192.168.1.20:8787");
       return;
@@ -684,6 +689,8 @@ void SettingsActivity::editText(const uint8_t id, const char* title, const std::
                            if (!text) return;
                            FosSettings& s = settings();
                            if (id == LICHESS) s.lichessToken = text->text;
+                           if (id == LICHESS_URL)
+                             s.lichessUrl = text->text.empty() ? "https://lichess.org" : text->text;
                            if (id == BACKEND_URL) s.backendUrl = text->text;
                            if (id == BACKEND_KEY) s.backendKey = text->text;
                            save();

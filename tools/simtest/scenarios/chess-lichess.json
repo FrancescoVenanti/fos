@@ -1,0 +1,21 @@
+{
+  "description": "Chess Lichess (mock): game list, open a game, send a move; daily puzzle, right move and reply",
+  "sd": "lichess-8799",
+  "backend": 8799,
+  "steps": [
+    {"tap": [353, 640]},
+    {"tap": [240, 325], "settle": 3000},
+    {"shot": "games"},
+    {"tap": [240, 281], "settle": 1500},
+    {"shot": "game"},
+    {"tap": [213, 523]},
+    {"tap": [213, 415], "settle": 3000},
+    {"shot": "move-sent"},
+    {"key": "BACK", "settle": 3000},
+    {"tap": [240, 157], "settle": 3000},
+    {"shot": "puzzle"},
+    {"tap": [267, 361]},
+    {"tap": [321, 253], "settle": 2500},
+    {"shot": "puzzle-correct"}
+  ]
+}

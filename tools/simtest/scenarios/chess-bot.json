@@ -1,0 +1,21 @@
+{
+  "description": "Chess vs bot: menu, setup, select a piece, move, bot reply, undo",
+  "sd": "backend-down",
+  "steps": [
+    {"tap": [353, 640]},
+    {"shot": "menu"},
+    {"tap": [240, 157]},
+    {"tap": [330, 303]},
+    {"shot": "setup"},
+    {"tap": [240, 746], "settle": 1500},
+    {"shot": "board"},
+    {"tap": [267, 523]},
+    {"shot": "selected"},
+    {"tap": [267, 415], "settle": 4000},
+    {"shot": "bot-replied"},
+    {"tap": [86, 750], "settle": 1500},
+    {"shot": "undone"},
+    {"key": "BACK"},
+    {"shot": "menu-in-progress"}
+  ]
+}

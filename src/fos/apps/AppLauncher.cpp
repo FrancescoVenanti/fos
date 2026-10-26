@@ -6,7 +6,9 @@
 #include "fos/apps/budgeteer/BudgetStore.h"
 #include "fos/apps/budgeteer/BudgeteerActivity.h"
 #include "fos/apps/calendar/CalendarActivity.h"
+#include "fos/apps/chess/ChessActivity.h"
 #include "fos/apps/lock/LockScreenActivity.h"
+#include "fos/apps/reader/ReaderHomeActivity.h"
 #include "fos/apps/timers/TimerStore.h"
 #include "fos/apps/timers/TimersActivity.h"
 #include "fos/apps/todo/TodoActivity.h"
@@ -68,6 +70,12 @@ void openApp(const AppId id) {
       break;
     case AppId::Timers:
       app = std::make_unique<timers::TimersActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::Reader:
+      app = std::make_unique<reader::ReaderHomeActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::Chess:
+      app = std::make_unique<chess::ChessActivity>(renderer, mappedInputManager);
       break;
     case AppId::Settings:
       app = std::make_unique<SettingsActivity>(renderer, mappedInputManager);

@@ -105,6 +105,7 @@ bool FosSettings::load() {
   autoSync = doc["sync"]["auto"] | true;
 
   lichessToken = doc["accounts"]["lichessToken"] | "";
+  lichessUrl = doc["accounts"]["lichessUrl"] | "https://lichess.org";
   backendUrl = doc["accounts"]["backendUrl"] | "http://127.0.0.1:8787";
   backendKey = doc["accounts"]["backendKey"] | "";
 
@@ -155,6 +156,7 @@ bool FosSettings::save() const {
 
   JsonObject accounts = doc["accounts"].to<JsonObject>();
   accounts["lichessToken"] = lichessToken.c_str();
+  accounts["lichessUrl"] = lichessUrl.c_str();
   accounts["backendUrl"] = backendUrl.c_str();
   accounts["backendKey"] = backendKey.c_str();
 
