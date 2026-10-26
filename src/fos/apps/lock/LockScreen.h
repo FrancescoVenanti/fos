@@ -33,6 +33,13 @@ struct Snapshot {
   std::string roomTemp;
   std::string roomHumidity;  // "47% humidity"
 
+  // A running or ended timer replaces the next event: it is more urgent.
+  bool hasTimer = false;
+  bool timerDone = false;
+  std::string timerLabel;  // "COUNTDOWN  ·  ENDS 20:45"
+  std::string timerTitle;  // "Time's up" / "12 min left"
+  std::string timerNote;   // "10:00 countdown ended at 20:45"
+
   bool hasEvent = false;
   std::string eventWhen;  // "TODAY 23:40"
   std::string eventTitle;
@@ -50,7 +57,8 @@ void draw(ui::Canvas& c, const ui::Rect& area, const Snapshot& s, bool asleep);
 void drawSleepFrame(const GfxRenderer& renderer);
 
 // Seconds until the next refresh boundary (e.g. the next quarter hour with a
-// 15-minute interval), for HalPowerManager::setWakeTimer().
+// 15-minute interval) or the end of a running timer, whichever is first, for
+// HalPowerManager::setWakeTimer().
 uint32_t secondsToNextRefresh();
 
 // Timed wake while asleep: redraws the sleep frame and refreshes the panel

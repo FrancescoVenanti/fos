@@ -14,7 +14,8 @@ struct StatusInfo {
   bool charging = false;
   bool wifi = false;
   SyncState sync = SyncState::Offline;
-  int pending = 0;  // queued entries waiting to sync
+  int pending = 0;         // queued entries waiting to sync
+  bool timerDone = false;  // a timer ended and was not dismissed
 };
 
 StatusInfo currentStatus();
@@ -22,6 +23,8 @@ StatusInfo currentStatus();
 // Called by the sync service.
 void setSyncState(SyncState state);
 void setPendingCount(int pending);
+// Called by the Timers app.
+void setTimerAlert(bool done);
 
 // Local time now. False if the clock has never been set.
 bool localNow(std::tm& out);

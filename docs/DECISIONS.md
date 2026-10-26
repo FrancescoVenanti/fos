@@ -196,3 +196,19 @@ loop now presents the panel, so screenshots can be taken of the sleep frame. Sce
 add `after_wake` steps for the relaunched process. `FOS_SIM_CLIMATE="<C>,<RH>"` sets the
 simulated sensor, `none` removes it.
 
+## D24 — Timers run on the wall clock
+Timers store absolute times (epoch milliseconds) in `/fos/timers/state.json`: a running
+countdown or pomodoro phase stores when it ends, a stopwatch when it started. Nothing
+ticks in the background, so they keep running through deep sleep and restarts (the
+ESP32 keeps the system clock in deep sleep; the Sticky's RTC covers power-off). A clock
+change (NTP sync) shifts running timers by the same amount; acceptable for minutes-long
+timers. The Sticky has no buzzer, so an ended timer is shown, not heard: "TIME'S UP"
+in the Timers app, a "TIME'S UP" tag in the status bar of every FOs screen (polled every
+250 ms), and a double-framed block on the lock screen, until it is dismissed. While the
+device sleeps, the lock screen's timed wake is set to the earlier of its refresh boundary
+and the end of a running timer, so the end appears on screen when it happens. A pomodoro
+phase that ends waits for a tap to start the next one ("Later" moves on without
+starting), so a break never starts unseen. All three timers can run at once; the
+running countdown or pomodoro (whichever ends first), or else a running stopwatch, takes
+the next event's place on the lock screen.
+

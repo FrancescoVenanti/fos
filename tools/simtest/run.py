@@ -31,8 +31,9 @@ A scenario is tools/simtest/scenarios/<name>.json:
 
 Each run starts from a fresh copy of tools/simtest/sd/ (plus the overlay) as
 the SD card. In overlay .json files, {{date}}, {{date+N}} and {{date-N}} become
-ISO dates relative to the day of the run, and {{unix-N}} a Unix time N seconds
-ago, so cached data stays "current". With "backend", a fresh mock backend (tools/mock-backend) runs for
+ISO dates relative to the day of the run, {{unix-N}} a Unix time N seconds ago
+and {{unixms+N}} one in milliseconds, so cached data and timers stay
+"current". With "backend", a fresh mock backend (tools/mock-backend) runs for
 the length of the scenario; point the overlay's settings at that port. Output:
 tools/simtest/out/<name>/NN-<shot>.png, sim.log and backend.log.
 
@@ -107,7 +108,7 @@ def build_timeline(scenario, out_dir, steps_key="steps", first_shot=1, boot_ms=3
     return ";".join(inputs), ";".join(shots), names, t + 300
 
 
-TOKEN = re.compile(r"\{\{(date|unix)([+-]\d+)?\}\}")
+TOKEN = re.compile(r"\{\{(date|unixms|unix)([+-]\d+)?\}\}")
 
 
 def expand_tokens(text):
@@ -115,6 +116,8 @@ def expand_tokens(text):
         offset = int(m.group(2) or 0)
         if m.group(1) == "date":
             return (dt.date.today() + dt.timedelta(days=offset)).isoformat()
+        if m.group(1) == "unixms":
+            return str(int(dt.datetime.now().timestamp() * 1000) + offset)
         return str(int(dt.datetime.now().timestamp()) + offset)
     return TOKEN.sub(sub, text)
 

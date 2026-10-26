@@ -141,8 +141,9 @@ int Canvas::scaledWidth(const int fontId, const char* text, const int scale256) 
   return width;
 }
 
-int Canvas::scaledText(const int fontId, const int x, const int baseline, const char* text, const int scale256) {
-  const bool black = ink(Tone::Black);
+int Canvas::scaledText(const int fontId, const int x, const int baseline, const char* text, const int scale256,
+                       const Tone tone) {
+  const bool black = ink(tone);
   int cx = x;
   for (const char* p = text; p && *p; ++p) {
     cx += renderer_.drawScaledCodepoint(fontId, static_cast<uint8_t>(*p), EpdFontFamily::REGULAR, cx, baseline,

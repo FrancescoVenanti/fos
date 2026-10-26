@@ -1,0 +1,14 @@
+{
+  "description": "A running countdown shows on the sleep screen; the device wakes when it ends and shows Time's up",
+  "sd": ["backend-down", "timers-countdown-running"],
+  "env": {"FOS_SIM_WAKE_TIMER_MS": 8000},
+  "steps": [
+    {"key": "SLEEP"},
+    {"wait": 1500},
+    {"shot": "asleep-running"}
+  ],
+  "after_wake": [
+    {"shot": "after-wake-times-up"},
+    {"wait": 500}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "description": "Timers: pomodoro lengths, start, skip; a work round that ends shows the break prompt",
+  "sd": ["backend-down", "timers-pomo-ending"],
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [353, 175]},
+    {"shot": "running-round4"},
+    {"wait": 5000},
+    {"shot": "break-time"},
+    {"tap": [333, 746]},
+    {"shot": "long-break-running"},
+    {"tap": [103, 746]},
+    {"shot": "skipped-to-work"},
+    {"tap": [278, 443]},
+    {"tap": [438, 507]},
+    {"shot": "lengths-changed"}
+  ]
+}

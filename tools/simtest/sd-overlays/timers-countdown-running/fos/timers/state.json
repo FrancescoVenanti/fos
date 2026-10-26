@@ -1,0 +1,1 @@
+{"countdown": {"duration": 600000, "run": 1, "end": {{unixms+9000}}}, "pomodoro": {"work": 25, "short": 5, "long": 15, "rounds": 4, "phase": 0, "round": 1, "span": {"duration": 1500000, "run": 0}}, "stopwatch": {"running": false, "start": 0, "accum": 0, "laps": []}, "alert": 0, "alertAt": 0, "tab": 2}

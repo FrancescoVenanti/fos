@@ -73,7 +73,9 @@ void statusBar(Canvas& c, const StatusInfo& status) {
 
   const char* sync = nullptr;
   char buf[16];
-  if (status.pending > 0) {
+  if (status.timerDone) {
+    sync = "TIME'S UP";
+  } else if (status.pending > 0) {
     snprintf(buf, sizeof(buf), "%d TO SYNC", status.pending);
     sync = buf;
   } else if (status.sync == SyncState::Syncing) {

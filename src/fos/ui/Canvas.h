@@ -88,9 +88,9 @@ class Canvas {
   // Word-wrapped text; returns the height used.
   int textWrapped(const Rect& rect, int fontId, const char* text, Tone tone, int maxLines, bool bold = false);
   int textWidth(int fontId, const char* text, bool bold = false) const;
-  // ASCII text scaled by scale256/256 (big clock digits), solid black in every
+  // ASCII text scaled by scale256/256 (big clock digits), solid ink in every
   // pass; y is the baseline. Returns the advance.
-  int scaledText(int fontId, int x, int baseline, const char* text, int scale256);
+  int scaledText(int fontId, int x, int baseline, const char* text, int scale256, Tone tone = Tone::Black);
   int scaledWidth(int fontId, const char* text, int scale256) const;
   int lineHeight(int fontId) const;
   int ascender(int fontId) const;

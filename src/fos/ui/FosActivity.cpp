@@ -6,6 +6,7 @@
 
 #include "activities/ActivityManager.h"
 #include "activities/RenderLock.h"
+#include "fos/apps/timers/TimerStore.h"
 #include "fos/settings/FosSettings.h"
 #include "fos/sync/Sync.h"
 
@@ -64,6 +65,9 @@ void FosActivity::loop() {
   // Activity state is read by the render task; mutate it under the render lock.
   RenderLock lock(*this);
   onTick();
+
+  // A timer that ends while another screen is open shows in the status bar.
+  if (timers::poll()) refresh();
 
   // Repaint the status bar when a sync starts or ends.
   const uint32_t syncGen = sync::generation();

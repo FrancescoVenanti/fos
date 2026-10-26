@@ -1,0 +1,16 @@
+{
+  "description": "Timers: stopwatch with two laps, pause, reset",
+  "sd": "backend-down",
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [353, 175]},
+    {"tap": [240, 155]},
+    {"shot": "idle"},
+    {"tap": [240, 746], "settle": 2500},
+    {"tap": [103, 746], "settle": 1500},
+    {"tap": [103, 746], "settle": 300},
+    {"shot": "running-laps"},
+    {"tap": [333, 746]},
+    {"shot": "paused"}
+  ]
+}

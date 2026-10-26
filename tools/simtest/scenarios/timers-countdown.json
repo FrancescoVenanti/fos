@@ -1,0 +1,28 @@
+{
+  "description": "Timers: countdown set with presets and steps, runs, ends; the status bar shows it elsewhere; dismiss",
+  "sd": "backend-down",
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [353, 175]},
+    {"shot": "pomodoro-idle"},
+    {"tap": [389, 155]},
+    {"shot": "countdown-idle"},
+    {"tap": [50, 433]},
+    {"tap": [297, 569]},
+    {"tap": [297, 569]},
+    {"tap": [297, 569]},
+    {"tap": [297, 569]},
+    {"tap": [297, 569]},
+    {"shot": "ten-seconds"},
+    {"tap": [240, 746]},
+    {"shot": "running"},
+    {"wait": 11000},
+    {"shot": "times-up"},
+    {"key": "HOME"},
+    {"shot": "launcher-alert"},
+    {"key": "DOWN"},
+    {"tap": [353, 175]},
+    {"tap": [240, 746]},
+    {"shot": "dismissed"}
+  ]
+}

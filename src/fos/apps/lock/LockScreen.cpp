@@ -17,6 +17,7 @@
 #include <cstring>
 
 #include "fos/apps/calendar/CalendarStore.h"
+#include "fos/apps/timers/TimerStore.h"
 #include "fos/core/Json.h"
 #include "fos/core/Status.h"
 #include "fos/settings/FosSettings.h"
@@ -135,6 +136,66 @@ void bar(Canvas& c, const float x1, const float y1, const float x2, const float 
   c.triangle(px(x1 + nx), px(y1 + ny), px(x2 - nx), px(y2 - ny), px(x1 - nx), px(y1 - ny), Tone::Black);
 }
 
+std::string clockAt(const int64_t ms) {
+  const std::time_t t = static_cast<std::time_t>(ms / 1000);
+  std::tm tm{};
+  localtime_r(&t, &tm);
+  char out[12];
+  formatClock(tm, out, sizeof(out));
+  return out;
+}
+
+std::string minutesLeft(const int64_t ms) {
+  const int64_t minutes = (ms + 59999) / 60000;
+  if (minutes < 60) return std::to_string(minutes) + " min left";
+  char out[24];
+  snprintf(out, sizeof(out), "%lld h %02lld min left", static_cast<long long>(minutes / 60),
+           static_cast<long long>(minutes % 60));
+  return out;
+}
+
+void captureTimer(Snapshot& s) {
+  const int64_t now = timers::nowMs();
+  timers::update(now);
+  const timers::State& t = timers::state();
+  const timers::Span& cd = t.countdown;
+  const timers::Pomodoro& p = t.pomodoro;
+  std::string phase = timers::phaseName(p.phase);
+  for (char& ch : phase) ch = static_cast<char>(toupper(static_cast<unsigned char>(ch)));
+  if (t.alert != timers::Alert::None) {
+    s.hasTimer = true;
+    s.timerDone = true;
+    s.timerTitle = "Time's up";
+    const std::string at = clockAt(t.alertAtMs);
+    if (t.alert == timers::Alert::Countdown) {
+      s.timerLabel = "COUNTDOWN";
+      s.timerNote = timers::format(cd.durationMs) + " countdown ended at " + at;
+    } else {
+      s.timerLabel = std::string("POMODORO") + DOT + phase;
+      s.timerNote = std::string(timers::phaseName(p.phase)) + " ended at " + at;
+    }
+    return;
+  }
+  // The running span that ends first.
+  const timers::Span* span = nullptr;
+  if (cd.run == timers::Run::Running) span = &cd;
+  if (p.span.run == timers::Run::Running && (!span || p.span.endMs < span->endMs)) span = &p.span;
+  if (span) {
+    s.hasTimer = true;
+    s.timerLabel = (span == &cd ? std::string("COUNTDOWN") : std::string("POMODORO") + DOT + phase) + DOT + "ENDS " +
+                   clockAt(span->endMs);
+    s.timerTitle = minutesLeft(span->endMs - now);
+    s.timerNote = "Updated " + clockAt(now);
+    return;
+  }
+  if (t.stopwatch.running) {
+    s.hasTimer = true;
+    s.timerLabel = "STOPWATCH";
+    s.timerTitle = "Running";
+    s.timerNote = "Started " + clockAt(t.stopwatch.startMs);
+  }
+}
+
 // Square analog face with hour ticks and two hands.
 void analogClock(Canvas& c, const Rect& r, const std::tm& t) {
   const Rect face = block(c, r, Tone::White);
@@ -222,7 +283,8 @@ void capture(Snapshot& s) {
       s.roomHumidity = text;
     }
   }
-  if (cfg.lockShowNextEvent) captureEvent(s);
+  captureTimer(s);
+  if (cfg.lockShowNextEvent && !s.hasTimer) captureEvent(s);
 }
 
 void draw(Canvas& c, const Rect& area, const Snapshot& s, const bool asleep) {
@@ -296,8 +358,20 @@ void draw(Canvas& c, const Rect& area, const Snapshot& s, const bool asleep) {
     }
   }
 
-  // Next event, inverted: the one thing to notice.
-  if (cfg.lockShowNextEvent && inner.h >= EVENT_H) {
+  // A timer, inverted, takes the next event's place.
+  if (s.hasTimer && inner.h >= EVENT_H) {
+    const Rect r = inner.takeTop(EVENT_H);
+    c.fill(r, Tone::Black);
+    if (s.timerDone) c.frame(r.inset(6), BORDER, Tone::White);  // double frame: needs attention
+    Rect face = r.inset(16, 12);
+    c.textIn(face.takeTop(c.lineHeight(font::SMALL)), font::SMALL, s.timerLabel.c_str(), Tone::White, Align::Left,
+             true);
+    face.takeTop(4);
+    c.textIn(face.takeTop(c.lineHeight(font::TITLE)), font::TITLE, s.timerTitle.c_str(), Tone::White, Align::Left,
+             true);
+    c.textIn(face.takeTop(c.lineHeight(font::BODY)), font::BODY, s.timerNote.c_str(), Tone::White, Align::Left);
+  } else if (cfg.lockShowNextEvent && inner.h >= EVENT_H) {
+    // Next event, inverted: the one thing to notice.
     const Rect r = inner.takeTop(EVENT_H);
     c.fill(r, Tone::Black);
     Rect face = r.inset(16, 12);
@@ -346,7 +420,10 @@ uint32_t secondsToNextRefresh() {
   if (!localNow(t)) return interval;
   const uint32_t intoDay = static_cast<uint32_t>(t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec);
   // Land a couple of seconds after the boundary so the minute has turned.
-  return interval - intoDay % interval + 2;
+  const uint32_t boundary = interval - intoDay % interval + 2;
+  // A timer that ends sooner wakes the device to show it.
+  const uint32_t timer = timers::secondsToNextEnd();
+  return timer > 0 ? std::min(boundary, timer + 1) : boundary;
 }
 
 void refreshWhileAsleep(const GfxRenderer& renderer) {

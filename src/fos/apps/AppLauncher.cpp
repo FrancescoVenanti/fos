@@ -7,6 +7,8 @@
 #include "fos/apps/budgeteer/BudgeteerActivity.h"
 #include "fos/apps/calendar/CalendarActivity.h"
 #include "fos/apps/lock/LockScreenActivity.h"
+#include "fos/apps/timers/TimerStore.h"
+#include "fos/apps/timers/TimersActivity.h"
 #include "fos/apps/todo/TodoActivity.h"
 #include "fos/launcher/LauncherActivity.h"
 #include "fos/settings/SettingsActivity.h"
@@ -41,7 +43,12 @@ class PlaceholderActivity final : public ui::FosActivity {
 
 }  // namespace
 
-void initApps() { budget::init(); }
+void initApps() {
+  budget::init();
+  // Loads the timers and raises the status-bar alert for one that ended
+  // while the device was off or asleep.
+  timers::update();
+}
 
 void openApp(const AppId id) {
   LOG_DBG("FOS", "Open app %s", appInfo(id).name);
@@ -58,6 +65,9 @@ void openApp(const AppId id) {
       break;
     case AppId::LockScreen:
       app = std::make_unique<lock::LockScreenActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::Timers:
+      app = std::make_unique<timers::TimersActivity>(renderer, mappedInputManager);
       break;
     case AppId::Settings:
       app = std::make_unique<SettingsActivity>(renderer, mappedInputManager);

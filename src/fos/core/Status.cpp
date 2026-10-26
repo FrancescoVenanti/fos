@@ -15,6 +15,7 @@ namespace {
 
 std::atomic<uint8_t> syncState{static_cast<uint8_t>(SyncState::Idle)};
 std::atomic<int> pendingCount{0};
+std::atomic<bool> timerAlert{false};
 
 }  // namespace
 
@@ -71,11 +72,14 @@ StatusInfo currentStatus() {
   info.wifi = WiFi.status() == WL_CONNECTED;
   info.sync = info.wifi ? static_cast<SyncState>(syncState.load()) : SyncState::Offline;
   info.pending = pendingCount.load();
+  info.timerDone = timerAlert.load();
   return info;
 }
 
 void setSyncState(const SyncState state) { syncState.store(static_cast<uint8_t>(state)); }
 
 void setPendingCount(const int pending) { pendingCount.store(pending); }
+
+void setTimerAlert(const bool done) { timerAlert.store(done); }
 
 }  // namespace fos
