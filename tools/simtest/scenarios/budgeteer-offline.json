@@ -1,6 +1,6 @@
 {
   "description": "Budgeteer offline: queue counter, six-step entry with typed description, entry queued",
-  "sd": "budget-offline",
+  "sd": ["budget-offline", "backend-down"],
   "steps": [
     {"tap": [123, 175], "settle": 300},
     {"shot": "checking"},

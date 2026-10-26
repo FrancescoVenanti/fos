@@ -1,0 +1,14 @@
+{
+  "description": "Calendar offline: last copy with its age, next event inverted, all-day and overnight events, pages",
+  "sd": ["calendar-cache", "backend-down"],
+  "steps": [
+    {"tap": [123, 330], "settle": 300},
+    {"shot": "updating"},
+    {"wait": 5000},
+    {"shot": "offline-p1"},
+    {"key": "DOWN"},
+    {"shot": "offline-p2"},
+    {"key": "DOWN"},
+    {"shot": "offline-p3"}
+  ]
+}

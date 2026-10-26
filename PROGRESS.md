@@ -53,7 +53,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [ ] Flashcards
 - [ ] Read-later
 - [ ] Puzzles
-- [ ] Calendar
+- [x] Calendar (read-only 7-day agenda, last copy offline)
 - [ ] Terminal (UI + mock session)
 
 ## Size history (sticky)
@@ -67,3 +67,4 @@ Static RAM is of the 320 KB internal DRAM (8 MB PSRAM not counted); flash is of 
 | 5 (design system, launcher, settings, fonts) | 78,924 B (24.1%) | 5,429,707 B (82.9%) |
 | 7 (Budgeteer) | 79,012 B (24.1%) | 5,459,779 B (83.3%) |
 | 7 (To-do) | 79,052 B (24.1%) | 5,479,711 B (83.6%) |
+| 7 (Calendar) | 79,052 B (24.1%) | 5,490,155 B (83.8%) |

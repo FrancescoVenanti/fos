@@ -1,0 +1,9 @@
+{
+  "description": "Calendar with no copy and no backend",
+  "sd": "backend-down",
+  "steps": [
+    {"tap": [123, 330]},
+    {"wait": 5000},
+    {"shot": "no-agenda"}
+  ]
+}

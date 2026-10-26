@@ -143,8 +143,9 @@ queue counter and "+ New transaction", as the spec asks. Description chips come 
 A scenario with `"backend": <port>` starts `tools/mock-backend/server.py` on that port
 for the run and saves its log as `backend.log`, so online flows are tested end to end.
 Scenarios point the device at the port with an SD overlay (`sd` takes a list of
-overlays). Online tests use 8799 and offline tests a closed port (8798), so a mock
-backend left running on the default 8787 cannot change their outcome.
+overlays). Online tests use 8799 (`backend-8799` overlay) and offline tests a closed
+port, 8798 (`backend-down`), so a mock backend left running on the default 8787 cannot
+change their outcome.
 
 ## D19 — To-do data and recurrence
 To-do keeps everything in one file, `/fos/todo/todo.json` (lists, tasks, next id), never
@@ -155,4 +156,21 @@ so a missed daily or weekly task does not pile up. A one-off task is marked done
 greyed at the bottom of its list until "Clear done", and can be reopened by tapping its
 box. New tasks are typed first and get a date or repeat in the editor, which saves only
 on Save (Back discards).
+
+## D20 — Calendar agenda
+The agenda always shows today and the next 6 days from the device clock, not from the
+copy's `from` date, so an old copy still lines up with the right days (past days drop
+off). Every day has a header; a day without events says "Nothing planned". Today's
+finished events are grey. The event that matters now is inverted with a NEXT tag (NOW
+while it runs): the first timed event today that has not ended, else the first event
+of a later day, else today's all-day event. An event that ends after midnight shows its
+end as "06:10 +1" and counts as running until the end of its first day. The status line
+says when the copy was downloaded, and "Offline" when the sync on opening failed.
+`calendar::nextEvent()` is shared so the lock screen can show the same next event.
+
+## D21 — Test overlays with relative dates
+Synced copies on test SD cards must look current on any day the tests run. In overlay
+`.json` files the runner replaces `{{date±N}}` with an ISO date relative to the day of
+the run and `{{unix±N}}` with a Unix time. `backend-8799` and `backend-down` are the
+shared overlays that point the device at the test backend or at a closed port.
 

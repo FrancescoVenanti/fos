@@ -1,6 +1,6 @@
 {
   "description": "Budgeteer online: queue sent on open, month summary, budgets, list, month change, new entry sent",
-  "sd": ["budget-offline", "budget-online"],
+  "sd": ["budget-offline", "backend-8799"],
   "backend": 8799,
   "steps": [
     {"tap": [123, 175], "settle": 300},

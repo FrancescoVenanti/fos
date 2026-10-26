@@ -1,0 +1,12 @@
+{
+  "description": "Calendar online: fresh agenda from the mock backend",
+  "sd": "backend-8799",
+  "backend": 8799,
+  "steps": [
+    {"tap": [123, 330], "settle": 300},
+    {"wait": 5000},
+    {"shot": "agenda-p1"},
+    {"key": "DOWN"},
+    {"shot": "agenda-p2"}
+  ]
+}

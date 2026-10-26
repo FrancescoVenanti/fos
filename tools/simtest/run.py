@@ -28,7 +28,9 @@ A scenario is tools/simtest/scenarios/<name>.json:
     }
 
 Each run starts from a fresh copy of tools/simtest/sd/ (plus the overlay) as
-the SD card. With "backend", a fresh mock backend (tools/mock-backend) runs for
+the SD card. In overlay .json files, {{date}}, {{date+N}} and {{date-N}} become
+ISO dates relative to the day of the run, and {{unix-N}} a Unix time N seconds
+ago, so cached data stays "current". With "backend", a fresh mock backend (tools/mock-backend) runs for
 the length of the scenario; point the overlay's settings at that port. Output:
 tools/simtest/out/<name>/NN-<shot>.png, sim.log and backend.log.
 
@@ -39,8 +41,10 @@ Usage:
 """
 
 import argparse
+import datetime as dt
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -100,6 +104,18 @@ def build_timeline(scenario, out_dir):
     return ";".join(inputs), ";".join(shots), names, t + 300
 
 
+TOKEN = re.compile(r"\{\{(date|unix)([+-]\d+)?\}\}")
+
+
+def expand_tokens(text):
+    def sub(m):
+        offset = int(m.group(2) or 0)
+        if m.group(1) == "date":
+            return (dt.date.today() + dt.timedelta(days=offset)).isoformat()
+        return str(int(dt.datetime.now().timestamp()) + offset)
+    return TOKEN.sub(sub, text)
+
+
 def prepare_sd(scenario, run_dir):
     sd = os.path.join(run_dir, "sd")
     if os.path.isdir(sd):
@@ -111,6 +127,16 @@ def prepare_sd(scenario, run_dir):
     overlays = scenario.get("sd") or []
     for overlay in [overlays] if isinstance(overlays, str) else overlays:
         shutil.copytree(os.path.join(SD_OVERLAYS, overlay), sd, dirs_exist_ok=True)
+    for root, _, files in os.walk(sd):
+        for name in files:
+            if name.endswith(".json"):
+                path = os.path.join(root, name)
+                with open(path, encoding="utf-8") as f:
+                    text = f.read()
+                expanded = expand_tokens(text)
+                if expanded != text:
+                    with open(path, "w", encoding="utf-8") as f:
+                        f.write(expanded)
     return sd
 
 

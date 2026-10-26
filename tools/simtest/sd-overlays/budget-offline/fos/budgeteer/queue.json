@@ -1,1 +1,1 @@
-{"entries":[{"clientId":"fos-test-0001","type":"expense","amount":350,"category":"ristoranti","description":"Caffe","date":"2026-10-25"},{"clientId":"fos-test-0002","type":"expense","amount":2490,"category":"spesa","description":"Lidl","date":"2026-10-25"}]}
+{"entries":[{"clientId":"fos-test-0001","type":"expense","amount":350,"category":"ristoranti","description":"Caffe","date":"{{date-1}}"},{"clientId":"fos-test-0002","type":"expense","amount":2490,"category":"spesa","description":"Lidl","date":"{{date-1}}"}]}
