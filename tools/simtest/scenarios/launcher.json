@@ -1,0 +1,11 @@
+{
+  "description": "Boot splash, launcher pages (medium icons)",
+  "boot_ms": 200,
+  "steps": [
+    {"shot": "boot"},
+    {"wait": 2800},
+    {"shot": "launcher-p1"},
+    {"key": "DOWN"},
+    {"shot": "launcher-p2"}
+  ]
+}

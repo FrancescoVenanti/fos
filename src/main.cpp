@@ -44,6 +44,8 @@
 #include "activities/ActivityManager.h"
 #include "activities/settings/SdFirmwareUpdateActivity.h"
 #include "components/UITheme.h"
+#include "fos/settings/FosSettings.h"
+#include "fos/ui/Fonts.h"
 #include "fontIds.h"
 #include "platform/UsbSerialJtagHandoff.h"
 #include "util/ButtonNavigator.h"
@@ -550,6 +552,8 @@ void setupDisplayAndFonts(bool seamless = false) {
   renderer.insertFont(UI_10_FONT_ID, ui10FontFamily);
   renderer.insertFont(UI_12_FONT_ID, ui12FontFamily);
   renderer.insertFont(SMALL_FONT_ID, smallFontFamily);
+  // FOs: UI fonts for the FOs design system.
+  fos::ui::registerFonts(renderer);
 
   // Discover and load SD card fonts
   sdFontSystem.begin(renderer);
@@ -655,6 +659,9 @@ void setup() {
     SETTINGS.readerMenuStyle = CrossPointSettings::READER_MENU_TOOLBAR;
   }
   SETTINGS.loadFromFile();
+  // FOs: device settings from /fos/settings.json (defaults when missing).
+  fos::settings().load();
+  fos::applySettings();
   // Push the saved timezone's POSIX rule into the clock (migrating the legacy
   // UTC-offset setting on first boot after the update).
   timezones::applyToClock();

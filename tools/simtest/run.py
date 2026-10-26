@@ -19,6 +19,8 @@ A scenario is tools/simtest/scenarios/<name>.json:
         {"swipe": [20, 400, 400, 400]},
         {"key": "DOWN"},        # UP, DOWN, ENTER (OK), POWER, BACK, HOME, SLEEP
         {"key": "POWER", "hold": 1500},
+        {"key": "ENTER", "settle": 150},  # per-step pause after the input
+        {"tap": [240, 400], "hold": 1500, "shot_at": 700, "shot_name": "pressed"},
         {"wait": 2000},
         {"shot": "settings"}
       ]
@@ -51,15 +53,23 @@ PROGRAM = os.path.join(REPO, ".pio", "build", "simulator", "program.exe" if os.n
 
 def build_timeline(scenario, out_dir):
     t = int(scenario.get("boot_ms", 3000))
-    settle = int(scenario.get("settle_ms", 900))
+    default_settle = int(scenario.get("settle_ms", 900))
     inputs, shots, names = [], [], []
+
+    def shot_at(at, label):
+        name = "%02d-%s.png" % (len(shots) + 1, label)
+        shots.append("%d:%s" % (at, os.path.join(out_dir, name)))
+        names.append(name)
+
     for step in scenario["steps"]:
+        settle = int(step.get("settle", default_settle))
+        if "shot_at" in step:
+            # Screenshot while this input is still in progress (e.g. a held tap).
+            shot_at(t + int(step["shot_at"]), step.get("shot_name", "during"))
         if "wait" in step:
             t += int(step["wait"])
         elif "shot" in step:
-            name = "%02d-%s.png" % (len(shots) + 1, step["shot"])
-            shots.append("%d:%s" % (t, os.path.join(out_dir, name)))
-            names.append(name)
+            shot_at(t, step["shot"])
             t += 100
         elif "tap" in step:
             x, y = step["tap"]

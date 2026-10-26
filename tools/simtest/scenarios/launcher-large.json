@@ -1,0 +1,1 @@
+{"description": "Launcher with large icons (1x4), labels off, Terminal and Lock screen hidden", "sd": "icons-large-nolabels", "steps": [{"shot": "large-p1"}, {"swipe": [400, 400, 60, 400]}, {"shot": "large-p2"}]}

@@ -149,6 +149,16 @@ bool WifiCredentialStore::removeCredential(const std::string& ssid) {
   return saveToFile();
 }
 
+bool WifiCredentialStore::moveCredential(const size_t index, const int delta) {
+  {
+    std::lock_guard<std::mutex> lock(credentialMutex);
+    const long to = static_cast<long>(index) + delta;
+    if (index >= credentials.size() || to < 0 || to >= static_cast<long>(credentials.size())) return false;
+    std::swap(credentials[index], credentials[static_cast<size_t>(to)]);
+  }
+  return saveToFile();
+}
+
 std::optional<WifiCredential> WifiCredentialStore::findCredential(const std::string& ssid) const {
   std::lock_guard<std::mutex> lock(credentialMutex);
 

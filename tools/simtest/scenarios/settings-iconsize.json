@@ -1,0 +1,14 @@
+{
+  "description": "Change icon size in Settings; OK twice goes Home; a held tap shows the pressed tile",
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [353, 640]},
+    {"tap": [240, 153]},
+    {"tap": [90, 186]},
+    {"shot": "apps-small-selected"},
+    {"key": "ENTER", "settle": 150},
+    {"key": "ENTER"},
+    {"shot": "home-small"},
+    {"tap": [237, 160], "hold": 1500, "shot_at": 900, "shot_name": "pressed"}
+  ]
+}

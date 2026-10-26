@@ -1,0 +1,30 @@
+{
+  "description": "Settings: main menu, sections, text entry with the keyboard",
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [353, 640]},
+    {"shot": "main"},
+    {"tap": [240, 153]},
+    {"shot": "apps"},
+    {"key": "DOWN"},
+    {"shot": "apps-p2"},
+    {"key": "BACK"},
+    {"tap": [240, 229]},
+    {"shot": "display"},
+    {"key": "BACK"},
+    {"tap": [240, 305]},
+    {"shot": "lock"},
+    {"key": "BACK"},
+    {"tap": [240, 381]},
+    {"shot": "wifi"},
+    {"key": "BACK"},
+    {"tap": [240, 457]},
+    {"shot": "accounts"},
+    {"tap": [240, 229]},
+    {"shot": "keyboard"},
+    {"key": "BACK"},
+    {"key": "BACK"},
+    {"key": "DOWN"},
+    {"shot": "main-p2"}
+  ]
+}

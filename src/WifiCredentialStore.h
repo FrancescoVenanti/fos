@@ -48,6 +48,8 @@ class WifiCredentialStore : public PersistableStore<WifiCredentialStore> {
   // Credential management
   bool addCredential(const std::string& ssid, const std::string& password);
   bool removeCredential(const std::string& ssid);
+  // FOs: reorder saved networks; the order is the connection priority.
+  bool moveCredential(size_t index, int delta);
   std::optional<WifiCredential> findCredential(const std::string& ssid) const;
   std::optional<WifiCredential> getCredentialAt(size_t index) const;
   std::optional<std::string> getSsidAt(size_t index) const;

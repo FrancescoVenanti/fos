@@ -1,0 +1,2 @@
+{"description": "Boot splash, then the default sleep screen", "boot_ms": 120,
+ "steps": [{"shot": "boot"}, {"wait": 2500}, {"key": "SLEEP"}, {"wait": 1500}, {"shot": "sleep"}]}
