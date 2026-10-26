@@ -10,6 +10,10 @@ class MappedInputManager;
 
 namespace fos {
 
+// Boot-time setup of the apps (sync pushers, status counters). Runs before
+// the sync worker starts.
+void initApps();
+
 // Opens an app on top of the launcher (Back returns to the launcher).
 void openApp(AppId id);
 

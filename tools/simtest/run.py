@@ -11,8 +11,9 @@ A scenario is tools/simtest/scenarios/<name>.json:
       "description": "Open Settings from the launcher",
       "boot_ms": 3000,          # time before the first step (default 3000)
       "settle_ms": 900,         # pause after each input (default 900)
-      "sd": "budget-online",    # optional overlay folder in tools/simtest/sd-overlays/
+      "sd": "budget-online",    # optional overlay folder(s) in tools/simtest/sd-overlays/, in order
       "env": {"FOS_SIM_NOW": "2026-10-26T09:41:00"},   # optional extra env vars
+      "backend": 8799,          # optional: run the mock backend on this port
       "steps": [
         {"shot": "launcher"},
         {"tap": [240, 400]},
@@ -27,7 +28,9 @@ A scenario is tools/simtest/scenarios/<name>.json:
     }
 
 Each run starts from a fresh copy of tools/simtest/sd/ (plus the overlay) as
-the SD card. Output: tools/simtest/out/<name>/NN-<shot>.png and sim.log.
+the SD card. With "backend", a fresh mock backend (tools/mock-backend) runs for
+the length of the scenario; point the overlay's settings at that port. Output:
+tools/simtest/out/<name>/NN-<shot>.png, sim.log and backend.log.
 
 Usage:
     python tools/simtest/run.py launcher
@@ -39,8 +42,10 @@ import argparse
 import json
 import os
 import shutil
+import socket
 import subprocess
 import sys
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
@@ -48,6 +53,7 @@ SCENARIOS = os.path.join(HERE, "scenarios")
 SD_TEMPLATE = os.path.join(HERE, "sd")
 SD_OVERLAYS = os.path.join(HERE, "sd-overlays")
 OUT = os.path.join(HERE, "out")
+BACKEND = os.path.join(REPO, "tools", "mock-backend", "server.py")
 PROGRAM = os.path.join(REPO, ".pio", "build", "simulator", "program.exe" if os.name == "nt" else "program")
 
 
@@ -102,10 +108,28 @@ def prepare_sd(scenario, run_dir):
         shutil.copytree(SD_TEMPLATE, sd)
     else:
         os.makedirs(sd)
-    overlay = scenario.get("sd")
-    if overlay:
+    overlays = scenario.get("sd") or []
+    for overlay in [overlays] if isinstance(overlays, str) else overlays:
         shutil.copytree(os.path.join(SD_OVERLAYS, overlay), sd, dirs_exist_ok=True)
     return sd
+
+
+def start_backend(port, run_dir):
+    """Starts the mock backend and waits until it accepts connections."""
+    log = open(os.path.join(run_dir, "backend.log"), "w", encoding="utf-8", errors="replace")
+    proc = subprocess.Popen([sys.executable, "-u", BACKEND, "--port", str(port)], stdout=log,
+                            stderr=subprocess.STDOUT, cwd=REPO)
+    for _ in range(50):
+        try:
+            socket.create_connection(("127.0.0.1", port), timeout=0.2).close()
+            return proc, log
+        except OSError:
+            if proc.poll() is not None:
+                break
+            time.sleep(0.1)
+    proc.kill()
+    log.close()
+    raise RuntimeError("mock backend did not start on port %d (see backend.log)" % port)
 
 
 def run(name):
@@ -129,6 +153,25 @@ def run(name):
     })
     env.update({k: str(v) for k, v in scenario.get("env", {}).items()})
 
+    backend = start_backend(int(scenario["backend"]), run_dir) if scenario.get("backend") else None
+    try:
+        code = run_program(env, run_dir, inputs, shots, total_ms)
+    finally:
+        if backend:
+            backend[0].terminate()
+            backend[0].wait(timeout=10)
+            backend[1].close()
+
+    missing = [n for n in names if not os.path.isfile(os.path.join(run_dir, n))]
+    status = "ok" if not missing and code in (0, "0") else "FAIL"
+    print("%-28s %s (exit %s)%s" % (name, status, code, "  missing: " + ", ".join(missing) if missing else ""))
+    for n in names:
+        if n not in missing:
+            print("    " + os.path.join(run_dir, n))
+    return status == "ok"
+
+
+def run_program(env, run_dir, inputs, shots, total_ms):
     with open(os.path.join(run_dir, "sim.log"), "w", encoding="utf-8", errors="replace") as log:
         log.write("INPUT %s\nSHOTS %s\n\n" % (inputs, shots))
         log.flush()
@@ -138,14 +181,7 @@ def run(name):
             code = proc.returncode
         except subprocess.TimeoutExpired:
             code = "timeout"
-
-    missing = [n for n in names if not os.path.isfile(os.path.join(run_dir, n))]
-    status = "ok" if not missing and code in (0, "0") else "FAIL"
-    print("%-28s %s (exit %s)%s" % (name, status, code, "  missing: " + ", ".join(missing) if missing else ""))
-    for n in names:
-        if n not in missing:
-            print("    " + os.path.join(run_dir, n))
-    return status == "ok"
+    return code
 
 
 def main():

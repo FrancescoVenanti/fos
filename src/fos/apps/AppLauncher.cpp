@@ -3,6 +3,8 @@
 #include <Logging.h>
 
 #include "activities/ActivityManager.h"
+#include "fos/apps/budgeteer/BudgetStore.h"
+#include "fos/apps/budgeteer/BudgeteerActivity.h"
 #include "fos/launcher/LauncherActivity.h"
 #include "fos/settings/SettingsActivity.h"
 #include "fos/ui/FosActivity.h"
@@ -36,10 +38,15 @@ class PlaceholderActivity final : public ui::FosActivity {
 
 }  // namespace
 
+void initApps() { budget::init(); }
+
 void openApp(const AppId id) {
   LOG_DBG("FOS", "Open app %s", appInfo(id).name);
   std::unique_ptr<Activity> app;
   switch (id) {
+    case AppId::Budgeteer:
+      app = std::make_unique<budget::BudgeteerActivity>(renderer, mappedInputManager);
+      break;
     case AppId::Settings:
       app = std::make_unique<SettingsActivity>(renderer, mappedInputManager);
       break;

@@ -45,6 +45,7 @@
 #include "activities/settings/SdFirmwareUpdateActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "fos/apps/AppLauncher.h"
 #include "fos/settings/FosSettings.h"
 #include "fos/sync/Sync.h"
 #include "fos/ui/Fonts.h"
@@ -839,7 +840,10 @@ void setup() {
   }
 
   // FOs: background sync worker; with auto-sync on it also syncs once at boot.
-  if (!recoveryFirmwareMode) fos::sync::begin();
+  if (!recoveryFirmwareMode) {
+    fos::initApps();
+    fos::sync::begin();
+  }
 
   allowSleepAt = millis() + 2000;
 }

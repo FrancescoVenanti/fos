@@ -127,3 +127,22 @@ into `/fos/<app>/cache*.json`. The last-sync time lives in `/fos/sync/state.json
 in `/fos/settings.json`, so the worker never writes the settings object that screens
 edit on the main task. If a run had to turn Wi-Fi on, it turns it off again when the
 queue is empty; if Wi-Fi was already on (web server, a live app) it is left on.
+
+## D17 — Budgeteer saves through the queue
+Every new entry goes into `/fos/budgeteer/queue.json` first, also when online; saving
+online then asks the sync worker to push at once. One path means one place where an
+entry can leave the queue: only after the backend confirms its `clientId` (201, or 200
+with `duplicate`). Transport errors and 5xx stop the push and keep everything; a 4xx is
+logged and the entry stays, so nothing typed is lost. The queue is guarded by a mutex
+because the main task appends while the worker drains it. "Online" for the home screen
+means the run the app triggered on open reached the backend; offline it shows only the
+queue counter and "+ New transaction", as the spec asks. Description chips come from
+`/fos/budgeteer/recent.json` (typed on the device) and then the downloaded month.
+
+## D18 — Test scenarios can run the mock backend
+A scenario with `"backend": <port>` starts `tools/mock-backend/server.py` on that port
+for the run and saves its log as `backend.log`, so online flows are tested end to end.
+Scenarios point the device at the port with an SD overlay (`sd` takes a list of
+overlays). Online tests use 8799 and offline tests a closed port (8798), so a mock
+backend left running on the default 8787 cannot change their outcome.
+

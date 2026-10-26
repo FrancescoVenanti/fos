@@ -58,6 +58,8 @@ bool ensureWifi(const unsigned long timeoutMs) {
 void wifiOff() {
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
+  // Forget the cached answer: the next check must reconnect and ask again.
+  lastHealthAt = 0;
   lastHealthOk = false;
 }
 
