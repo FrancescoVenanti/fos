@@ -5,6 +5,7 @@
 #include "activities/ActivityManager.h"
 #include "fos/apps/budgeteer/BudgetStore.h"
 #include "fos/apps/budgeteer/BudgeteerActivity.h"
+#include "fos/apps/todo/TodoActivity.h"
 #include "fos/launcher/LauncherActivity.h"
 #include "fos/settings/SettingsActivity.h"
 #include "fos/ui/FosActivity.h"
@@ -46,6 +47,9 @@ void openApp(const AppId id) {
   switch (id) {
     case AppId::Budgeteer:
       app = std::make_unique<budget::BudgeteerActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::Todo:
+      app = std::make_unique<todo::TodoActivity>(renderer, mappedInputManager);
       break;
     case AppId::Settings:
       app = std::make_unique<SettingsActivity>(renderer, mappedInputManager);

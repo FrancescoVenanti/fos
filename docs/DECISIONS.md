@@ -146,3 +146,13 @@ Scenarios point the device at the port with an SD overlay (`sd` takes a list of
 overlays). Online tests use 8799 and offline tests a closed port (8798), so a mock
 backend left running on the default 8787 cannot change their outcome.
 
+## D19 — To-do data and recurrence
+To-do keeps everything in one file, `/fos/todo/todo.json` (lists, tasks, next id), never
+synced. A first run creates one "Inbox" list; there are at most 6 lists so the chips fit
+in two rows. Completing a recurring task does not mark it done: its due date moves to the
+first occurrence after today (monthly keeps the day of month, clamped to short months),
+so a missed daily or weekly task does not pile up. A one-off task is marked done, stays
+greyed at the bottom of its list until "Clear done", and can be reopened by tapping its
+box. New tasks are typed first and get a date or repeat in the editor, which saves only
+on Save (Back discards).
+

@@ -41,7 +41,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 
 ## Phase 7 — Apps
 - [x] Budgeteer (offline queue, 6-step entry, month view)
-- [ ] To-do
+- [x] To-do (lists, due dates, recurring tasks, tap-to-complete)
 - [ ] Chess (vs bot, 1v1, Lichess (mocked), blindfold trainer)
 - [ ] Reader (CrossPoint)
 - [ ] Lock screen
@@ -66,3 +66,4 @@ Static RAM is of the 320 KB internal DRAM (8 MB PSRAM not counted); flash is of 
 | 4 (CrossPoint baseline, prebuilt core) | 78,676 B (24.0%) | 5,304,363 B (80.9%) |
 | 5 (design system, launcher, settings, fonts) | 78,924 B (24.1%) | 5,429,707 B (82.9%) |
 | 7 (Budgeteer) | 79,012 B (24.1%) | 5,459,779 B (83.3%) |
+| 7 (To-do) | 79,052 B (24.1%) | 5,479,711 B (83.6%) |
