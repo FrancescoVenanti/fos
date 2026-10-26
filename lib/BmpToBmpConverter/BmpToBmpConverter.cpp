@@ -111,7 +111,6 @@ bool BmpToBmpConverter::bmpFileToBmpStream(HalFile& bmpFile, Print& bmpOut, cons
     const int slot = loaded[0] == keep ? 1 : 0;
     if (src.readRowGray(layout.sourceY + y, rows[slot], raw.get()) != BmpReaderError::Ok) {
       LOG_ERR("BMP", "Failed to read source row %d", y);
-      loaded[slot] = -1;
       return nullptr;
     }
     loaded[slot] = y;
@@ -148,14 +147,12 @@ bool BmpToBmpConverter::bmpFileToBmpStream(HalFile& bmpFile, Print& bmpOut, cons
         for (int outX = 0; outX < dstW; ++outX) {
           const int x0 = outX * srcW / dstW;
           const int x1 = std::max(x0 + 1, (outX + 1) * srcW / dstW);
-          for (int x = x0; x < x1; ++x) accum[outX] += row0[layout.sourceX + x];
+          uint32_t sum = 0;
+          for (int x = x0; x < x1; ++x) sum += row0[layout.sourceX + x];
+          accum[outX] += sum / (x1 - x0);
         }
       }
-      for (int outX = 0; outX < dstW; ++outX) {
-        const int x0 = outX * srcW / dstW;
-        const int x1 = std::max(x0 + 1, (outX + 1) * srcW / dstW);
-        accum[outX] /= static_cast<uint32_t>((y1 - y0) * (x1 - x0));
-      }
+      for (int outX = 0; outX < dstW; ++outX) accum[outX] /= (y1 - y0);
     }
 
     memset(outRow.get(), 0, outRowBytes);
