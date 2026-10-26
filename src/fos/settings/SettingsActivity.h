@@ -45,7 +45,7 @@ class SettingsActivity final : public ui::FosActivity {
 
   enum Action : uint16_t {
     BACK = 1,
-    ITEM,       // value = item index
+    ITEM,  // value = item index
     PREV_PAGE,
     NEXT_PAGE,
     MOVE_UP,    // value = item index

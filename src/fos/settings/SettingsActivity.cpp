@@ -268,7 +268,8 @@ void SettingsActivity::rebuild() {
       addChoice(OK_ACTION, "OK BUTTON (SHORT PRESS)", OK_ACTIONS, 3, static_cast<int>(s.okAction));
       addSection("OK TWICE: HOME.  HOLD OK: SLEEP.");
       addChoice(KEYBOARD, "KEYBOARD LAYOUT", KEYBOARDS, 3, static_cast<int>(s.keyboardLayout));
-      addToggle(ACCENTS, "Accented letters", s.accentedLetters, "Extra key row: \xC3\xA0 \xC3\xA8 \xC3\xA9 \xC3\xAC \xC3\xB2 \xC3\xB9");
+      addToggle(ACCENTS, "Accented letters", s.accentedLetters,
+                "Extra key row: \xC3\xA0 \xC3\xA8 \xC3\xA9 \xC3\xAC \xC3\xB2 \xC3\xB9");
       break;
 
     case Page::Power: {
@@ -388,10 +389,11 @@ void SettingsActivity::drawItem(Canvas& c, const Rect& r, const int index) {
       }
       row.takeRight(GAP);
       const int bs = 52;
-      glyphButton(c, {row.right() - bs, row.y + (row.h - bs) / 2, bs, bs}, Glyph::Down, MOVE_DOWN, ButtonStyle::Secondary,
-                  v);
+      glyphButton(c, {row.right() - bs, row.y + (row.h - bs) / 2, bs, bs}, Glyph::Down, MOVE_DOWN,
+                  ButtonStyle::Secondary, v);
       row.takeRight(bs + 8);
-      glyphButton(c, {row.right() - bs, row.y + (row.h - bs) / 2, bs, bs}, Glyph::Up, MOVE_UP, ButtonStyle::Secondary, v);
+      glyphButton(c, {row.right() - bs, row.y + (row.h - bs) / 2, bs, bs}, Glyph::Up, MOVE_UP, ButtonStyle::Secondary,
+                  v);
       row.takeRight(bs + GAP);
       if (item.detail.empty()) {
         c.textIn(row, font::BODY, item.label.c_str(), item.on ? Tone::Black : Tone::Dark, Align::Left, true);
@@ -452,8 +454,8 @@ void SettingsActivity::draw(Canvas& c, const Rect& body) {
     dialog(c, "Clear caches?", "Removes the synced copies of all apps. Your own data and the Budgeteer queue stay.",
            "Clear", DIALOG_OK, "Cancel", DIALOG_CANCEL);
   } else if (confirmId_ == FACTORY_RESET) {
-    dialog(c, "Factory reset?", "Erases all FOs settings and app data on the microSD. Books stay.", "Reset",
-           DIALOG_OK, "Cancel", DIALOG_CANCEL);
+    dialog(c, "Factory reset?", "Erases all FOs settings and app data on the microSD. Books stay.", "Reset", DIALOG_OK,
+           "Cancel", DIALOG_CANCEL);
   }
 }
 
@@ -623,8 +625,7 @@ void SettingsActivity::activate(const int index) {
       confirmId_ = item.id;
       return;
     case CHECK_UPDATE:
-      startActivityForResult(std::make_unique<OtaUpdateActivity>(renderer, mappedInput),
-                             [](const ActivityResult&) {});
+      startActivityForResult(std::make_unique<OtaUpdateActivity>(renderer, mappedInput), [](const ActivityResult&) {});
       return;
     default:
       return;
@@ -673,19 +674,18 @@ void SettingsActivity::choose(const int index, const int option) {
 
 void SettingsActivity::editText(const uint8_t id, const char* title, const std::string& value, const bool secret,
                                 const char* hint) {
-  startActivityForResult(
-      std::make_unique<TextEntryActivity>(renderer, mappedInput, title, value, secret, 200, hint),
-      [this, id](const ActivityResult& result) {
-        if (result.isCancelled) return;
-        const auto* text = std::get_if<KeyboardResult>(&result.data);
-        if (!text) return;
-        FosSettings& s = settings();
-        if (id == LICHESS) s.lichessToken = text->text;
-        if (id == BACKEND_URL) s.backendUrl = text->text;
-        if (id == BACKEND_KEY) s.backendKey = text->text;
-        save();
-        rebuild();
-      });
+  startActivityForResult(std::make_unique<TextEntryActivity>(renderer, mappedInput, title, value, secret, 200, hint),
+                         [this, id](const ActivityResult& result) {
+                           if (result.isCancelled) return;
+                           const auto* text = std::get_if<KeyboardResult>(&result.data);
+                           if (!text) return;
+                           FosSettings& s = settings();
+                           if (id == LICHESS) s.lichessToken = text->text;
+                           if (id == BACKEND_URL) s.backendUrl = text->text;
+                           if (id == BACKEND_KEY) s.backendKey = text->text;
+                           save();
+                           rebuild();
+                         });
 }
 
 void SettingsActivity::save() {

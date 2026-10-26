@@ -9,7 +9,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 ## Phase 1 — Repository
 - [x] Fork crosspoint-reader as `fos`, clone with submodules
 - [x] `docs/PRODUCT.md` from the spec
-- [x] Keep CrossPoint license; credit CrossPoint in README (About screen: Phase 5)
+- [x] Keep CrossPoint license; credit CrossPoint in README and the About screen
 
 ## Phase 2 — Understand
 - [x] Study architecture, rendering, input, fonts, SD caching, build environments
@@ -26,12 +26,12 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] `sticky` env builds (ESP32-S3); RAM/flash usage reported
 
 ## Phase 5 — FOs foundations
-- [ ] Rebrand: boot screen, version string, About (credits CrossPoint)
-- [ ] Design system: outlines, hard shadows, 4-gray fills, heavy type
-- [ ] Components: status bar, buttons, cards, list rows, toggles, segmented control
-- [ ] On-screen keyboard, numeric keypad
-- [ ] Launcher: icon sizes S (3×5), M (2×4), L (1×4), labels on/off, pages
-- [ ] Settings app (all sections from the spec), persisted on SD, never hideable
+- [x] Rebrand: boot screen, sleep screen, version string, About (credits CrossPoint), web page titles
+- [x] Design system: outlines, hard shadows, 4-gray fills, heavy type (`src/fos/ui/`)
+- [x] Components: status bar, header, buttons, cards, list rows, toggles, segmented control, chips, dialog, pager
+- [x] On-screen keyboard (QWERTY/QWERTZ/AZERTY, accents), numeric keypad
+- [x] Launcher: icon sizes S (3×5), M (2×4), L (1×4), labels on/off, pages
+- [x] Settings app (all sections from the spec), persisted on SD, never hideable
 
 ## Phase 6 — Mock backend
 - [ ] `tools/mock-backend` (Python stdlib) for every row of the sync table
@@ -62,3 +62,4 @@ Static RAM is of the 320 KB internal DRAM (8 MB PSRAM not counted); flash is of 
 | Phase | RAM | Flash |
 | --- | --- | --- |
 | 4 (CrossPoint baseline, prebuilt core) | 78,676 B (24.0%) | 5,304,363 B (80.9%) |
+| 5 (design system, launcher, settings, fonts) | 78,924 B (24.1%) | 5,429,707 B (82.9%) |

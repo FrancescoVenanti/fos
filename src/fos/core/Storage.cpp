@@ -10,10 +10,10 @@
 namespace fos {
 namespace {
 
-constexpr const char* APP_FOLDERS[APP_COUNT] = {
-    "/fos/budgeteer", "/fos/todo",   "/fos/calendar",   "/fos/notes",  "/fos/reader",  "/fos/readlater",
-    "/fos/flashcards", "/fos/chess", "/fos/puzzles",    "/fos/timers", "/fos/calculator", "/fos/wallet",
-    "/fos/habits",    "/fos/terminal", "/fos/lockscreen", "/fos/settings"};
+constexpr const char* APP_FOLDERS[APP_COUNT] = {"/fos/budgeteer", "/fos/todo",      "/fos/calendar",   "/fos/notes",
+                                                "/fos/reader",    "/fos/readlater", "/fos/flashcards", "/fos/chess",
+                                                "/fos/puzzles",   "/fos/timers",    "/fos/calculator", "/fos/wallet",
+                                                "/fos/habits",    "/fos/terminal",  "/fos/lockscreen", "/fos/settings"};
 
 uint64_t sumTree(HalFile& dir, const int depth) {
   uint64_t total = 0;

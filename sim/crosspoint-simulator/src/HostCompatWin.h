@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +38,14 @@ static inline int setenv(const char *name, const char *value, int overwrite) {
 }
 
 static inline int unsetenv(const char *name) { return _putenv_s(name, ""); }
+
+static inline struct tm *localtime_r(const time_t *t, struct tm *out) {
+  return localtime_s(out, t) == 0 ? out : NULL;
+}
+
+static inline struct tm *gmtime_r(const time_t *t, struct tm *out) {
+  return gmtime_s(out, t) == 0 ? out : NULL;
+}
 
 // The simulator never sets the host clock; trusted-time sync is a no-op.
 static inline int settimeofday(const struct timeval *tv, const void *tz) {

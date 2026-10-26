@@ -129,7 +129,9 @@ Rect block(Canvas& c, const Rect& r, const Tone face, const uint16_t action, con
 
 void button(Canvas& c, const Rect& r, const char* label, const uint16_t action, const ButtonStyle style,
             const int16_t value, const int fontId) {
-  const Tone face = style == ButtonStyle::Primary ? Tone::Black : style == ButtonStyle::Quiet ? Tone::Light : Tone::White;
+  const Tone face = style == ButtonStyle::Primary ? Tone::Black
+                    : style == ButtonStyle::Quiet ? Tone::Light
+                                                  : Tone::White;
   const Rect inner = block(c, r, face, action, value, style != ButtonStyle::Quiet);
   c.textIn(inner.inset(8, 0), fontId, label, style == ButtonStyle::Primary ? Tone::White : Tone::Black, Align::Center,
            true);
@@ -137,7 +139,9 @@ void button(Canvas& c, const Rect& r, const char* label, const uint16_t action, 
 
 void glyphButton(Canvas& c, const Rect& r, const Glyph glyph, const uint16_t action, const ButtonStyle style,
                  const int16_t value) {
-  const Tone face = style == ButtonStyle::Primary ? Tone::Black : style == ButtonStyle::Quiet ? Tone::Light : Tone::White;
+  const Tone face = style == ButtonStyle::Primary ? Tone::Black
+                    : style == ButtonStyle::Quiet ? Tone::Light
+                                                  : Tone::White;
   const Rect inner = block(c, r, face, action, value, style != ButtonStyle::Quiet);
   drawGlyph(c, inner, glyph, style == ButtonStyle::Primary ? Tone::White : Tone::Black);
 }
@@ -146,7 +150,7 @@ void drawGlyph(Canvas& c, const Rect& r, const Glyph glyph, const Tone tone) {
   const int cx = r.x + r.w / 2;
   const int cy = r.y + r.h / 2;
   const int s = std::max(6, std::min(r.w, r.h) * 3 / 10);  // half-size of the glyph
-  const int t = std::max(3, s / 3);                         // stroke
+  const int t = std::max(3, s / 3);                        // stroke
   switch (glyph) {
     case Glyph::Back:
       c.triangle(cx - s, cy, cx, cy - s, cx, cy + s, tone);

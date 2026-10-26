@@ -110,7 +110,8 @@ void LauncherActivity::draw(Canvas& c, const Rect& body) {
   Rect top = area.takeTop(64);
   std::tm now{};
   char date[40] = "FOs";
-  if (localNow(now)) snprintf(date, sizeof(date), "%s %d %s", weekdayName(now.tm_wday), now.tm_mday, monthName(now.tm_mon));
+  if (localNow(now))
+    snprintf(date, sizeof(date), "%s %d %s", weekdayName(now.tm_wday), now.tm_mday, monthName(now.tm_mon));
   c.textIn(top, font::TITLE, date, Tone::Black, Align::Left, true);
 
   const int pages = pageCount();

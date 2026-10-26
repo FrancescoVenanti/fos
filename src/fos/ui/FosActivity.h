@@ -56,8 +56,8 @@ class FosActivity : public Activity {
   HitList liveHits_;
   uint16_t pressedAction_ = 0;
   int16_t pressedValue_ = 0;
-  bool pressFrame_ = false;   // next frame only shows a press: fast B/W refresh
-  bool fullNext_ = true;      // next frame is a full refresh
+  bool pressFrame_ = false;  // next frame only shows a press: fast B/W refresh
+  bool fullNext_ = true;     // next frame is a full refresh
   int updatesSinceFull_ = 0;
 };
 

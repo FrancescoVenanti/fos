@@ -1,0 +1,29 @@
+#pragma once
+
+#include <string>
+
+namespace fos::net {
+
+// Joins the first reachable saved network (Settings > Wi-Fi order). In the
+// simulator the host network stands in for Wi-Fi. True when connected.
+bool ensureWifi(unsigned long timeoutMs = 8000);
+void wifiOff();
+
+struct Response {
+  int status = -1;  // HTTP status, < 0 on a transport failure
+  std::string body;
+  bool ok() const { return status >= 200 && status < 300; }
+};
+
+// Requests against Settings > Accounts > Backend address, with the backend key
+// as a bearer token. path starts with "/api/v1/...".
+Response backendGet(const std::string& path, unsigned long timeoutMs = 8000);
+Response backendPost(const std::string& path, const std::string& json, unsigned long timeoutMs = 8000);
+// Any URL (Lichess); headers are "Name: value" lines.
+Response request(const char* method, const std::string& url, const std::string& body, const std::string& bearer,
+                 unsigned long timeoutMs = 8000);
+
+// Backend reachable right now (GET /api/v1/health, cached for a few seconds).
+bool backendOnline();
+
+}  // namespace fos::net

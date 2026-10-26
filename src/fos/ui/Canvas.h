@@ -84,8 +84,7 @@ class Canvas {
   // y is the top of the line box.
   void text(int fontId, int x, int y, const char* text, Tone tone, bool bold = false);
   // Single line inside rect: vertically centered, ellipsized to fit.
-  void textIn(const Rect& rect, int fontId, const char* text, Tone tone, Align align = Align::Left,
-              bool bold = false);
+  void textIn(const Rect& rect, int fontId, const char* text, Tone tone, Align align = Align::Left, bool bold = false);
   // Word-wrapped text; returns the height used.
   int textWrapped(const Rect& rect, int fontId, const char* text, Tone tone, int maxLines, bool bold = false);
   int textWidth(int fontId, const char* text, bool bold = false) const;

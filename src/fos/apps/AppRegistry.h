@@ -34,8 +34,8 @@ struct AppInfo {
   AppId id;
   const char* name;
   AppGroup group;
-  bool usesNetwork;  // syncs or talks to a server when available
-  bool needsNetwork; // does not work offline (Terminal)
+  bool usesNetwork;   // syncs or talks to a server when available
+  bool needsNetwork;  // does not work offline (Terminal)
 };
 
 const AppInfo& appInfo(AppId id);

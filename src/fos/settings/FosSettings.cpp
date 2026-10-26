@@ -187,9 +187,9 @@ FosSettings& settings() {
 void applySettings() {
   // FOs owns the sleep timeout; CrossPoint's power loop reads SETTINGS.
   const uint8_t minutes = settings().sleepMinutes;
-  SETTINGS.sleepTimeoutMinutes =
-      minutes == 0 ? CrossPointSettings::SLEEP_TIMEOUT_NEVER_MINUTES
-                   : std::min<uint8_t>(minutes, CrossPointSettings::MAX_SLEEP_TIMEOUT_MINUTES - 1);
+  SETTINGS.sleepTimeoutMinutes = minutes == 0
+                                     ? CrossPointSettings::SLEEP_TIMEOUT_NEVER_MINUTES
+                                     : std::min<uint8_t>(minutes, CrossPointSettings::MAX_SLEEP_TIMEOUT_MINUTES - 1);
 }
 
 }  // namespace fos

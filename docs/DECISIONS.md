@@ -88,3 +88,34 @@ panel pixels (exact 480x800, only the panel's 4 gray values, independent of wind
 real button set (Up, Down, OK/Power), and Esc/H as the back/home edge gestures. Scenarios
 are JSON files run by `tools/simtest/run.py`, each against a fresh copy of
 `tools/simtest/sd/`.
+
+## D11 — FOs fonts and icons
+UI type is Space Grotesk (Medium/Bold) with Space Mono for the terminal, both OFL, a
+bold grotesque that fits the neo-brutalist look. They are converted with CrossPoint's
+`fontconvert.py` (2-bit, compressed; ~120 KB) by `tools/fonts/build_fos_fonts.py`. The
+44 pt "jumbo" font carries only digits and money/time symbols (`--only-intervals`, a
+small FOs option added to `fontconvert.py`). App icons are Lucide (ISC) rasterized at
+36/48/64 px with thicker strokes by `tools/icons/build_fos_icons.py` (resvg instead of
+the SDK's librsvg dependency). Generated files live in `src/fos/ui/generated/` and
+are committed, so building needs no Python font tools.
+
+## D12 — Text is drawn without anti-aliasing
+FOs text is solid ink in every plane: 2-bit glyphs are drawn as B/W, so on a gray card
+black text stays black and white text stays white. Glyph edges are slightly heavier
+than CrossPoint's anti-aliased reader text, which suits the heavy type of the design.
+
+## D13 — Saved Wi-Fi networks stay in CrossPoint's store
+Settings > Wi-Fi and sync lists CrossPoint's `WifiCredentialStore` (passwords
+obfuscated with a device key) instead of keeping networks in `/fos/settings.json`. The
+list order is the priority (`moveCredential` added); "Add network" opens CrossPoint's
+scan-and-join screen.
+
+## D14 — What "clear caches" and "factory reset" erase
+Clear caches removes each app's synced copy (`/fos/<app>/cache*.json` and the read-later
+articles) and keeps user data and the Budgeteer queue. Factory reset erases `/fos`
+entirely (settings and all FOs data); books and CrossPoint's reader caches stay.
+
+## D15 — Launcher and Home
+`ActivityManager::goHome()` now shows the FOs launcher; CrossPoint's HomeActivity is
+unused. Apps open on top of the launcher (`pushActivity`), so Back returns to it.
+On the launcher, Up/Down and horizontal swipes turn pages and OK goes to the next page.

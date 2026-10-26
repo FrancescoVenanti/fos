@@ -36,21 +36,22 @@ LLVM clang-format 21, Python 3.12. `pio` is not on PATH on this machine, so comm
 $pio = "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe"
 ```
 
-`toolsuild.ps1 <env>` wraps `pio run` with UTF-8 output (PlatformIO crashes on
-non-ASCII lines when its output is redirected), writes `.piouild-<env>.log` and prints
+`tools\build.ps1 <env>` wraps `pio run` with UTF-8 output (PlatformIO crashes on
+non-ASCII lines when its output is redirected), writes `.pio\build-<env>.log` and prints
 errors plus RAM/flash use.
 
 | Task | Command |
 | --- | --- |
-| Build simulator | `.	oolsuild.ps1 simulator` |
+| Build simulator | `.\tools\build.ps1 simulator` |
 | Run simulator | `.\.pio\build\simulator\program.exe` (2× window: `$env:FOS_SIM_SCALE="2"`) |
 | Headless UI test | `python tools\simtest\run.py <scenario>` → PNGs in `tools\simtest\out\<scenario>\` |
 | All headless scenarios | `python tools\simtest\run.py --all` |
-| Build device firmware | `.	oolsuild.ps1 sticky` |
-| Flash device | `.	oolsuild.ps1 sticky -Target upload` |
+| Build device firmware | `.\tools\build.ps1 sticky` |
+| Flash device | `.\tools\build.ps1 sticky -Target upload` |
 | Static analysis | `& $pio check -e sticky --skip-packages` |
 | Format | `.\bin\clang-format-fix.ps1 -g` (stage new files first: `-g` only sees tracked changes) |
 | Mock backend | `python tools\mock-backend\server.py` (http://127.0.0.1:8787) |
+| Regenerate fonts / icons | `.venv\Scripts\python tools\fonts\build_fos_fonts.py` / `tools\icons\build_fos_icons.py` |
 
 A first simulator build compiles the whole firmware natively and takes 10+ minutes;
 incremental builds are fast. Editing `platformio.ini` makes PlatformIO wipe **all** of
@@ -122,8 +123,13 @@ relevant scenarios and look at the PNGs before committing.**
   4 px hard shadow, pressed = no shadow + 4 px shift), cards, list rows, toggles,
   segmented control, chips, tabs, on-screen keyboard, numeric keypad.
 - **Screens** (`src/fos/ui/FosActivity.h`): FOs screens subclass `FosActivity`. They
-  implement `draw(Canvas&)` (pure: may be called 3× per frame) and `onAction(id)`. Hit
-  areas are registered while drawing and routed from touch in `loop()`.
+  implement `draw(Canvas&, body)` (pure: may be called 3× per frame) and
+  `onAction(action, value)`. Hit areas are registered while drawing and routed from touch
+  in `loop()`, which runs under the render lock. Physical buttons arrive as
+  `onUp/onDown/onOk/onBack`. Text entry: push `ui::TextEntryActivity` with
+  `startActivityForResult` and read the `KeyboardResult`.
+- **Apps** (`src/fos/apps/`): `AppId` order is persisted (append only). `openApp()` in
+  `AppLauncher.cpp` maps each id to its activity.
 - **Launcher** (`src/fos/launcher/`): app grid from `FosSettings` (visible apps, order,
   icon size S 3×5 / M 2×4 / L 1×4, labels, pages). Replaces CrossPoint's Home.
 - **Settings** (`src/fos/settings/`): `/fos/settings.json`, device-only, never synced.
@@ -139,6 +145,8 @@ relevant scenarios and look at the PNGs before committing.**
   where integration needs it, and mark those edits with a short `// FOs:` comment.
 - No heap allocation in steady-state repaint paths; size containers when data loads.
 - All user-visible strings are English for now (FOs strings are not in the i18n tables).
+- Macro hazards: Arduino and HalStorage define `DISPLAY`, `Storage`, `HIGH`, `LOW` and
+  friends as macros, so avoid those names for enum values and constants.
 - Persist with ArduinoJson to `/fos/<app>/*.json` through `Storage`; write to a `.tmp`
   file and `Storage.replaceFile()` for atomic saves.
 - Never commit secrets: no real tokens or keys in code, tests, or `tools/simtest/sd/`.

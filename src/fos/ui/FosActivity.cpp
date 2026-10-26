@@ -154,8 +154,7 @@ void FosActivity::render(RenderLock&&) {
   }
 
   const bool absolute = renderer.grayscaleCapabilities(HalDisplay::GrayscaleMode::Absolute).supported();
-  if (!gray || pressOnly || !absolute ||
-      !renderer.displayGrayscaleBase(HalDisplay::GrayscaleMode::Absolute, mode)) {
+  if (!gray || pressOnly || !absolute || !renderer.displayGrayscaleBase(HalDisplay::GrayscaleMode::Absolute, mode)) {
     renderer.displayBuffer(mode);
     return;
   }
