@@ -1,0 +1,20 @@
+{
+  "description": "Sudoku: a new easy game, a hint, pencil notes, back to the menu with the game saved",
+  "sd": "backend-down",
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [123, 175]},
+    {"tap": [125, 277], "settle": 1500},
+    {"shot": "new-easy"},
+    {"tap": [392, 694]},
+    {"shot": "hint"},
+    {"tap": [240, 694]},
+    {"tap": [432, 563]},
+    {"tap": [39, 628]},
+    {"tap": [89, 628]},
+    {"tap": [439, 628]},
+    {"shot": "notes"},
+    {"key": "BACK"},
+    {"shot": "menu-continue"}
+  ]
+}

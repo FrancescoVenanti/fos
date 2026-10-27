@@ -1,0 +1,20 @@
+{
+  "description": "Word puzzle: synced daily word, a wrong guess, a word not in the list, the solve",
+  "sd": ["backend-down", "puzzles-daily"],
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [123, 175]},
+    {"shot": "menu"},
+    {"tap": [240, 155]},
+    {"tap": [192, 742]}, {"tap": [169, 614]}, {"tap": [51, 678]}, {"tap": [333, 742]}, {"tap": [122, 614]},
+    {"tap": [41, 742]},
+    {"shot": "crane"},
+    {"tap": [28, 614]}, {"tap": [28, 614]}, {"tap": [28, 614]}, {"tap": [28, 614]}, {"tap": [28, 614]},
+    {"tap": [41, 742]},
+    {"shot": "not-a-word"},
+    {"tap": [438, 742]}, {"tap": [438, 742]}, {"tap": [438, 742]}, {"tap": [438, 742]}, {"tap": [438, 742]},
+    {"tap": [451, 614]}, {"tap": [427, 678]}, {"tap": [51, 678]}, {"tap": [333, 742]}, {"tap": [216, 614]},
+    {"tap": [41, 742]},
+    {"shot": "solved"}
+  ]
+}

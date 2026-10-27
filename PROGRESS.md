@@ -53,7 +53,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] Wallet (QR, Code 128, EAN-13 drawn on the device; synced or on the card)
 - [x] Flashcards (spaced repetition on the device; synced decks and CSV files)
 - [x] Read-later (synced articles or .txt files, paged reading view, read status sent back)
-- [ ] Puzzles
+- [x] Puzzles (Sudoku generated on the device in 4 levels; daily word from sync or a bundled pack)
 - [x] Calendar (read-only 7-day agenda, last copy offline)
 - [ ] Terminal (UI + mock session)
 

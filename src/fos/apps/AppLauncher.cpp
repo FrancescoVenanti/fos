@@ -12,6 +12,7 @@
 #include "fos/apps/habits/HabitsActivity.h"
 #include "fos/apps/lock/LockScreenActivity.h"
 #include "fos/apps/notes/NotesActivity.h"
+#include "fos/apps/puzzles/PuzzlesActivity.h"
 #include "fos/apps/reader/ReaderHomeActivity.h"
 #include "fos/apps/readlater/ReadLaterActivity.h"
 #include "fos/apps/timers/TimerStore.h"
@@ -103,6 +104,9 @@ void openApp(const AppId id) {
       break;
     case AppId::ReadLater:
       app = std::make_unique<readlater::ReadLaterActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::Puzzles:
+      app = std::make_unique<puzzles::PuzzlesActivity>(renderer, mappedInputManager);
       break;
     case AppId::Settings:
       app = std::make_unique<SettingsActivity>(renderer, mappedInputManager);
