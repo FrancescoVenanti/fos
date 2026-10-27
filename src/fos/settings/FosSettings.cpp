@@ -122,6 +122,8 @@ bool FosSettings::load() {
   sheetUrl = doc["accounts"]["sheetUrl"] | "";
   sheetKey = doc["accounts"]["sheetKey"] | "";
   calendarUrl = doc["accounts"]["calendarUrl"] | "";
+  terminalUrl = doc["accounts"]["terminalUrl"] | "";
+  terminalKey = doc["accounts"]["terminalKey"] | "";
 
   swapUpDown = doc["buttons"]["swapUpDown"] | false;
   okAction = enumFrom(doc["buttons"]["ok"], OkAction::Back, 3);
@@ -177,6 +179,8 @@ bool FosSettings::save() const {
   accounts["sheetUrl"] = sheetUrl.c_str();
   accounts["sheetKey"] = sheetKey.c_str();
   accounts["calendarUrl"] = calendarUrl.c_str();
+  accounts["terminalUrl"] = terminalUrl.c_str();
+  accounts["terminalKey"] = terminalKey.c_str();
 
   JsonObject buttons = doc["buttons"].to<JsonObject>();
   buttons["swapUpDown"] = swapUpDown;

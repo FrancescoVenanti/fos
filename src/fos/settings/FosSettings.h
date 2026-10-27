@@ -53,6 +53,9 @@ struct FosSettings {
   std::string sheetKey;
   // Calendar without the backend: a secret iCal (.ics) address.
   std::string calendarUrl;
+  // Terminal: the relay on the computer (tools/terminal-relay). Empty = the backend.
+  std::string terminalUrl;
+  std::string terminalKey;
 
   // Buttons and keyboard
   bool swapUpDown = false;

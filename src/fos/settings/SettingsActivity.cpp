@@ -58,6 +58,8 @@ enum Id : uint8_t {
   SHEET_KEY,
   CALENDAR_URL,
   WEATHER_PLACE,
+  TERMINAL_URL,
+  TERMINAL_KEY,
   BACKEND_URL,
   BACKEND_KEY,
   SWAP_BUTTONS,
@@ -275,6 +277,9 @@ void SettingsActivity::rebuild() {
       addNav(SHEET_KEY, "Sheet key", masked(s.sheetKey));
       addSection("CALENDAR");
       addNav(CALENDAR_URL, "Calendar link (iCal)", s.calendarUrl.empty() ? "Not set" : "Set");
+      addSection("TERMINAL RELAY");
+      addNav(TERMINAL_URL, "Relay address", s.terminalUrl.empty() ? "Not set (uses the backend)" : s.terminalUrl);
+      addNav(TERMINAL_KEY, "Relay key", masked(s.terminalKey));
       addSection("SYNC BACKEND (OPTIONAL)");
       addNav(BACKEND_URL, "Backend address", s.backendUrl.empty() ? "Not set" : s.backendUrl);
       addNav(BACKEND_KEY, "Backend key", masked(s.backendKey));
@@ -624,6 +629,13 @@ void SettingsActivity::activate(const int index) {
       editText(CALENDAR_URL, "Calendar link (iCal)", s.calendarUrl, true,
                "Google Calendar: Settings > your calendar > Secret address in iCal format.");
       return;
+    case TERMINAL_URL:
+      editText(TERMINAL_URL, "Relay address", s.terminalUrl, false,
+               "Shown by tools/terminal-relay/relay.py on your computer, e.g. http://192.168.1.20:8790");
+      return;
+    case TERMINAL_KEY:
+      editText(TERMINAL_KEY, "Relay key", s.terminalKey, true, "The key the relay prints when it starts.");
+      return;
     case WEATHER_PLACE:
       editText(WEATHER_PLACE, "Weather place", s.weatherPlace, false, "A city, e.g. Milano. Used without a backend.");
       return;
@@ -719,6 +731,8 @@ void SettingsActivity::editText(const uint8_t id, const char* title, const std::
                            if (id == SHEET_KEY) s.sheetKey = text->text;
                            if (id == CALENDAR_URL) s.calendarUrl = text->text;
                            if (id == WEATHER_PLACE) s.weatherPlace = text->text;
+                           if (id == TERMINAL_URL) s.terminalUrl = text->text;
+                           if (id == TERMINAL_KEY) s.terminalKey = text->text;
                            if (id == LICHESS_URL)
                              s.lichessUrl = text->text.empty() ? "https://lichess.org" : text->text;
                            if (id == BACKEND_URL) s.backendUrl = text->text;

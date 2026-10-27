@@ -55,7 +55,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] Read-later (synced articles or .txt files, paged reading view, read status sent back)
 - [x] Puzzles (Sudoku generated on the device in 4 levels; daily word from sync or a bundled pack)
 - [x] Calendar (read-only 7-day agenda, last copy offline)
-- [ ] Terminal (UI + mock session)
+- [x] Terminal (live transcript, quick replies, Approve/Deny; relay script for Claude Code)
 
 ## Size history (sticky)
 
@@ -73,3 +73,4 @@ Static RAM is of the 320 KB internal DRAM (8 MB PSRAM not counted); flash is of 
 | 7 (Timers) | 79,212 B (24.2%) | 5,517,359 B (84.2%) |
 | 7 (Reader, Chess) | 79,236 B (24.2%) | 5,614,831 B (85.7%) |
 | 7 (direct sources, Calculator) | 79,428 B (24.2%) | 5,650,131 B (86.2%) |
+| 7 (all apps) | 79,500 B (24.3%) | 5,738,619 B (87.6%) |

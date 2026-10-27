@@ -1,0 +1,16 @@
+{
+  "description": "Terminal against the mock session: transcript, permission request, approve, a quick reply, scroll",
+  "sd": "backend-8799",
+  "backend": 8799,
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [353, 485], "settle": 5000},
+    {"shot": "session"},
+    {"tap": [357, 704], "settle": 4500},
+    {"shot": "approved"},
+    {"tap": [60, 691], "settle": 4500},
+    {"shot": "continued"},
+    {"key": "UP"},
+    {"shot": "scrolled-up"}
+  ]
+}

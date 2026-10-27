@@ -282,3 +282,22 @@ refused rather than drawn wrong). Codes come from the sync and from
 card by hand, so the wallet works without a backend. The test screenshots were decoded
 with OpenCV (QR, EAN-13) and a Code 128 reader to check every format scans.
 
+## D31 — Puzzles
+Sudoku is generated on the device: a random full grid (randomized backtracking), then
+clues removed in symmetric pairs and then singly, keeping a cell removed only while the
+solver still finds exactly one solution. Easy 40, Medium 32, Hard 27, Expert about 24
+clues; a puzzle takes a few milliseconds. Difficulty is by clue count only, not by
+solving technique. The word puzzle uses an original list of 264 common five-letter
+answers (each used once before any repeats) plus a dictionary of accepted guesses; the
+synced daily word replaces the pack's word when it is for today.
+
+## D32 — Terminal and its relay
+The Terminal app speaks one small API (session poll, prompt, approval) to either the
+backend or `tools/terminal-relay/relay.py`, which runs on the computer and drives Claude
+Code in print mode (`claude -p --output-format stream-json --resume`). Print mode cannot
+ask, so tools needing permission are denied and reported; the relay turns the last
+denial into the device's Approve/Deny, and Approve re-runs with that tool allowed.
+The device polls every 3 s (1.2 s while waiting for a reply) only while the app is open,
+and turns Wi-Fi off on exit if it was off before. With Space Mono 8 pt about 52 columns
+fit on the 448 px transcript.
+
