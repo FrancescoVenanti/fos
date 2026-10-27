@@ -1,0 +1,16 @@
+{
+  "description": "Calculator currency conversion with rates from the sync",
+  "sd": "backend-8799",
+  "backend": 8799,
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [123, 330], "settle": 4000},
+    {"tap": [345, 153]},
+    {"tap": [420, 217]},
+    {"tap": [323, 750]},
+    {"tap": [85, 568]},
+    {"tap": [240, 750]},
+    {"tap": [240, 750]},
+    {"shot": "eur-to-usd"}
+  ]
+}

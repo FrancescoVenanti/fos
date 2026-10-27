@@ -47,7 +47,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] Reader (CrossPoint)
 - [x] Lock screen (clock styles, weather, room climate, next event; sleep screen with timed refresh)
 - [x] Timers (Pomodoro, stopwatch with laps, countdown; run through sleep)
-- [ ] Calculator
+- [x] Calculator (expression calculator, unit converter, synced currency rates)
 - [ ] Notes and sketch
 - [ ] Habits
 - [ ] Wallet
@@ -72,3 +72,4 @@ Static RAM is of the 320 KB internal DRAM (8 MB PSRAM not counted); flash is of 
 | 7 (Lock screen) | 79,068 B (24.1%) | 5,503,527 B (84.0%) |
 | 7 (Timers) | 79,212 B (24.2%) | 5,517,359 B (84.2%) |
 | 7 (Reader, Chess) | 79,236 B (24.2%) | 5,614,831 B (85.7%) |
+| 7 (direct sources, Calculator) | 79,428 B (24.2%) | 5,650,131 B (86.2%) |

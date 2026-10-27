@@ -1,0 +1,23 @@
+{
+  "description": "Calculator: (12+3)x4 with a live result, equals; converter categories, unit picker, currency without rates",
+  "sd": "backend-down",
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [123, 330]},
+    {"tap": [176, 455]},
+    {"tap": [64, 680]},
+    {"tap": [176, 680]},
+    {"tap": [400, 680]},
+    {"tap": [288, 680]},
+    {"tap": [288, 455]},
+    {"tap": [400, 530]},
+    {"tap": [64, 605]},
+    {"shot": "typing"},
+    {"tap": [400, 750]},
+    {"shot": "equals"},
+    {"tap": [345, 153]},
+    {"shot": "convert-length"},
+    {"tap": [74, 444]},
+    {"shot": "picker"}
+  ]
+}

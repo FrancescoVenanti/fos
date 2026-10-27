@@ -31,7 +31,7 @@ class LauncherActivity final : public ui::FosActivity {
   void reload();
   void turn(int delta);
 
-  AppId apps_[APP_COUNT];
+  AppId apps_[APP_COUNT] = {};
   int count_ = 0;
   int page_ = 0;
 };
