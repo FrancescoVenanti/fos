@@ -1,0 +1,13 @@
+{
+  "description": "Habits: checklist with streaks, check one off, the 5-week grid, add a habit",
+  "sd": ["backend-down", "habits"],
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [123, 485]},
+    {"shot": "today"},
+    {"tap": [240, 248]},
+    {"shot": "checked"},
+    {"tap": [345, 153]},
+    {"shot": "grid"}
+  ]
+}

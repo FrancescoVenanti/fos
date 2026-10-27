@@ -137,7 +137,7 @@ DAILY_WORDS = ["PIANO", "LEMON", "CRANE", "STORM", "GHOST", "PLANT", "BRICK", "M
 RATES = {"USD": 1.0842, "GBP": 0.8391, "CHF": 0.9412, "JPY": 162.31, "SEK": 11.402, "PLN": 4.317}
 
 WALLET = [
-    {"id": "w1", "label": "Esselunga Fidaty", "kind": "barcode", "format": "ean13", "payload": "2501234567890"},
+    {"id": "w1", "label": "Esselunga Fidaty", "kind": "barcode", "format": "ean13", "payload": "2501234567898"},
     {"id": "w2", "label": "Gym membership", "kind": "qr", "format": "qr", "payload": "FOS-GYM-000417"},
     {"id": "w3", "label": "Train MI-TO 18:05", "kind": "qr", "format": "qr",
      "payload": "TRENITALIA|PNR=QX7K2P|COACH=7|SEAT=42A|DATE=%s" % iso(today())},

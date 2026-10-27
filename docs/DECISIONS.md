@@ -272,3 +272,13 @@ hook in CrossPoint's base class) lets a screen keep its swipes while drawing, an
 Back, Home and light-panel gestures skip it. Scripted simulator swipes now pass through
 intermediate points every 20 ms, like a finger.
 
+## D30 — Wallet codes
+Codes are drawn on the device in whole-pixel modules with a quiet zone: QR (ricmoo
+QRCode, error correction M), Code 128 (set B) and EAN-13 (check digit computed or
+verified). The QR library does not check capacity, so the version comes from the
+standard byte-mode capacity table (versions 1-25, up to 997 bytes; larger payloads are
+refused rather than drawn wrong). Codes come from the sync and from
+`/fos/wallet/codes.json`, which holds codes added on the device and can be copied to the
+card by hand, so the wallet works without a backend. The test screenshots were decoded
+with OpenCV (QR, EAN-13) and a Code 128 reader to check every format scans.
+

@@ -8,12 +8,14 @@
 #include "fos/apps/calculator/CalculatorActivity.h"
 #include "fos/apps/calendar/CalendarActivity.h"
 #include "fos/apps/chess/ChessActivity.h"
+#include "fos/apps/habits/HabitsActivity.h"
 #include "fos/apps/lock/LockScreenActivity.h"
 #include "fos/apps/notes/NotesActivity.h"
 #include "fos/apps/reader/ReaderHomeActivity.h"
 #include "fos/apps/timers/TimerStore.h"
 #include "fos/apps/timers/TimersActivity.h"
 #include "fos/apps/todo/TodoActivity.h"
+#include "fos/apps/wallet/WalletActivity.h"
 #include "fos/launcher/LauncherActivity.h"
 #include "fos/settings/SettingsActivity.h"
 #include "fos/sync/Direct.h"
@@ -86,6 +88,12 @@ void openApp(const AppId id) {
       break;
     case AppId::Notes:
       app = std::make_unique<notes::NotesActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::Habits:
+      app = std::make_unique<habits::HabitsActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::Wallet:
+      app = std::make_unique<wallet::WalletActivity>(renderer, mappedInputManager);
       break;
     case AppId::Settings:
       app = std::make_unique<SettingsActivity>(renderer, mappedInputManager);

@@ -1,0 +1,9 @@
+{
+  "description": "Habits on a fresh card",
+  "sd": "backend-down",
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [123, 485]},
+    {"shot": "empty"}
+  ]
+}

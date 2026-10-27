@@ -1,0 +1,5 @@
+{"habits": [
+ {"name": "Read 20 minutes", "done": ["{{date-12}}","{{date-11}}","{{date-10}}","{{date-6}}","{{date-5}}","{{date-4}}","{{date-3}}","{{date-2}}","{{date-1}}"]},
+ {"name": "No sugar", "done": ["{{date-30}}","{{date-29}}","{{date-20}}","{{date-15}}","{{date-14}}","{{date-1}}","{{date}}"]},
+ {"name": "Stretch", "done": []}
+]}

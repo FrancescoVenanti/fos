@@ -1,0 +1,20 @@
+{
+  "description": "Wallet: synced codes plus one from the card; QR, EAN-13 and Code 128 drawn on the device",
+  "sd": ["backend-8799", "wallet-local"],
+  "backend": 8799,
+  "steps": [
+    {"key": "DOWN"},
+    {"tap": [353, 330], "settle": 4000},
+    {"shot": "list"},
+    {"tap": [240, 155]},
+    {"shot": "ean13-local"},
+    {"key": "DOWN"},
+    {"shot": "ean13-synced"},
+    {"key": "DOWN"},
+    {"shot": "qr"},
+    {"key": "DOWN"},
+    {"shot": "qr-long"},
+    {"key": "DOWN"},
+    {"shot": "code128"}
+  ]
+}

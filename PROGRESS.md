@@ -49,8 +49,8 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] Timers (Pomodoro, stopwatch with laps, countdown; run through sleep)
 - [x] Calculator (expression calculator, unit converter, synced currency rates)
 - [x] Notes and sketch (multi-line notes, freehand drawing with pen, eraser, undo)
-- [ ] Habits
-- [ ] Wallet
+- [x] Habits (daily checklist, streaks, 5-week grid)
+- [x] Wallet (QR, Code 128, EAN-13 drawn on the device; synced or on the card)
 - [ ] Flashcards
 - [ ] Read-later
 - [ ] Puzzles
