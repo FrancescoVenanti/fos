@@ -12,6 +12,9 @@ class TextEntryActivity final : public FosActivity {
   TextEntryActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::string title, std::string text,
                     bool secret = false, size_t maxLength = 120, std::string hint = {});
 
+  // Enter types a new line; the header's Done finishes. The field grows.
+  TextEntryActivity& multiline();
+
  protected:
   void draw(Canvas& c, const Rect& body) override;
   void onAction(uint16_t action, int16_t value) override;
@@ -25,6 +28,7 @@ class TextEntryActivity final : public FosActivity {
   std::string title_;
   std::string hint_;
   bool secret_;
+  bool multiline_ = false;
   Keyboard keyboard_;
 };
 

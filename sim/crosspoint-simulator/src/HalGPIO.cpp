@@ -100,6 +100,7 @@ enum class SyntheticAction {
   CoverDown,
   CoverUp,
   TouchDown,
+  TouchMove,  // FOs: intermediate swipe points (drawing)
   TouchUp,
   HomeDown,
   HomeUp,
@@ -454,6 +455,15 @@ void initializeSyntheticEvents() {
                            duration, swipe)) {
           syntheticEvents.push_back(
               {atMs, SyntheticAction::TouchDown, -1, x1, y1});
+          // FOs: a swipe moves through points every 20 ms, like a finger.
+          if (swipe) {
+            const unsigned long steps = duration / 20;
+            for (unsigned long i = 1; i < steps; ++i) {
+              const float t = static_cast<float>(i) / static_cast<float>(steps);
+              syntheticEvents.push_back({atMs + i * 20, SyntheticAction::TouchMove, -1,
+                                         x1 + (x2 - x1) * t, y1 + (y2 - y1) * t});
+            }
+          }
           syntheticEvents.push_back(
               {atMs + duration, SyntheticAction::TouchUp, -1, x2, y2});
         }
@@ -518,6 +528,9 @@ void processSyntheticEvents() {
       break;
     case SyntheticAction::TouchDown:
       beginTouch(event.logicalNx, event.logicalNy);
+      break;
+    case SyntheticAction::TouchMove:
+      moveTouch(event.logicalNx, event.logicalNy);
       break;
     case SyntheticAction::TouchUp:
       endTouch(event.logicalNx, event.logicalNy);

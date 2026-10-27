@@ -1,5 +1,8 @@
 #include "TextEntryActivity.h"
 
+#include <algorithm>
+#include <vector>
+
 namespace fos::ui {
 
 using namespace theme;
@@ -12,6 +15,12 @@ TextEntryActivity::TextEntryActivity(GfxRenderer& renderer, MappedInputManager& 
       secret_(secret),
       keyboard_(std::move(text), maxLength) {}
 
+TextEntryActivity& TextEntryActivity::multiline() {
+  multiline_ = true;
+  keyboard_.setMultiline(true);
+  return *this;
+}
+
 void TextEntryActivity::draw(Canvas& c, const Rect& body) {
   Rect area = body;
   header(c, area.takeTop(HEADER_H), title_.c_str(), BACK, "Done", DONE);
@@ -19,7 +28,7 @@ void TextEntryActivity::draw(Canvas& c, const Rect& body) {
   // Text field: white box, 3 px outline, the value in the body font with a
   // block cursor. Secret values show dots except the last character.
   area = area.inset(GUTTER, 0);
-  const Rect field{area.x, area.y + 8, area.w, 120};
+  const Rect field{area.x, area.y + 8, area.w, multiline_ ? 250 : 120};
   c.fill(field, Tone::White);
   c.frame(field, BORDER, Tone::Black);
   const Rect inside = field.inset(BORDER + 10, BORDER + 8);
@@ -32,7 +41,25 @@ void TextEntryActivity::draw(Canvas& c, const Rect& body) {
     shown = masked;
   }
   shown += "_";
-  const int used = c.textWrapped(inside, font::BODY, shown.c_str(), Tone::Black, 3, true);
+  if (multiline_) {
+    // Only the end of a long text fits: show its last lines, one per row.
+    std::vector<std::string> lines;
+    size_t start = 0;
+    while (start <= shown.size()) {
+      const size_t nl = shown.find('\n', start);
+      lines.push_back(shown.substr(start, nl == std::string::npos ? std::string::npos : nl - start));
+      if (nl == std::string::npos) break;
+      start = nl + 1;
+    }
+    const int lh = c.lineHeight(font::BODY);
+    const int rows = inside.h / lh;
+    const int first = std::max(0, static_cast<int>(lines.size()) - rows);
+    for (int i = first; i < static_cast<int>(lines.size()); ++i) {
+      c.textIn({inside.x, inside.y + (i - first) * lh, inside.w, lh}, font::BODY, lines[i].c_str(), Tone::Black,
+               Align::Left, i == 0);
+    }
+  }
+  const int used = multiline_ ? 0 : c.textWrapped(inside, font::BODY, shown.c_str(), Tone::Black, 3, true);
   (void)used;
 
   if (!keyboard_.text().empty()) {

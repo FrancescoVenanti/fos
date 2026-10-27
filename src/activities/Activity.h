@@ -54,6 +54,9 @@ class Activity {
   virtual bool handleForcedRefresh() { return false; }
   virtual bool isHomeActivity() const { return false; }
   virtual bool handleHomeGesture() { return false; }
+  // FOs: true while the screen uses touch drags itself (drawing), so the edge
+  // swipes (Back, Home, light panel) do not fire.
+  virtual bool capturesSwipes() const { return false; }
   virtual ScreenshotInfo getScreenshotInfo() const { return {}; }
 
   // Start a new activity without destroying the current one

@@ -78,7 +78,7 @@ void FosActivity::loop() {
     refresh();
   }
 
-  if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+  if (!capturesSwipes() && mappedInput.wasPressed(MappedInputManager::Button::Back)) {
     onBack();
     return;
   }

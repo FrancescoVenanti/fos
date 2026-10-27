@@ -24,6 +24,8 @@ class Keyboard {
 
   const std::string& text() const { return text_; }
   void setText(std::string text) { text_ = std::move(text); }
+  // Multi-line: the Enter key types a new line instead of finishing.
+  void setMultiline(bool on) { multiline_ = on; }
 
  private:
   enum class Page : uint8_t { Letters, Symbols };
@@ -39,6 +41,7 @@ class Keyboard {
   Page page_ = Page::Letters;
   Shift shift_ = Shift::Once;
   unsigned long lastShiftAt_ = 0;
+  bool multiline_ = false;
 };
 
 // 3x4 numeric keypad: 1-9, decimal separator, 0, backspace. The separator is

@@ -137,7 +137,11 @@ void Keyboard::draw(Canvas& c, const Rect& r, const uint16_t action) const {
         drawGlyph(c, block(c, key, Tone::Light, action, value), Glyph::Backspace, Tone::Black);
       } else if (strcmp(k, K_ENTER) == 0) {
         const Rect face = block(c, key, Tone::Black, action, value);
-        c.textIn(face, font::SMALL, "OK", Tone::White, Align::Center, true);
+        if (multiline_) {
+          drawGlyph(c, face, Glyph::Back, Tone::White);  // a return arrow
+        } else {
+          c.textIn(face, font::SMALL, "OK", Tone::White, Align::Center, true);
+        }
       } else if (strcmp(k, K_PAGE) == 0) {
         const Rect face = block(c, key, Tone::Light, action, value);
         c.textIn(face, font::SMALL, page_ == Page::Letters ? "123" : "ABC", Tone::Black, Align::Center, true);
@@ -177,7 +181,12 @@ Keyboard::Event Keyboard::press(const int16_t value) {
       popUtf8(text_);
       return Event::Changed;
     }
-    if (strcmp(k, K_ENTER) == 0) return Event::Enter;
+    if (strcmp(k, K_ENTER) == 0) {
+      if (!multiline_) return Event::Enter;
+      if (text_.size() >= maxLength_) return Event::None;
+      text_ += '\n';
+      return Event::Changed;
+    }
     if (strcmp(k, K_PAGE) == 0) {
       page_ = page_ == Page::Letters ? Page::Symbols : Page::Letters;
       return Event::Changed;

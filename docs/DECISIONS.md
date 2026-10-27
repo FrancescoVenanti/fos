@@ -263,3 +263,12 @@ was used. Explicit settings win over the backend:
 address is now empty (the simulator keeps the local mock). Tests point public APIs at
 the mock with `FOS_SIM_DIRECT_BASE`.
 
+## D29 — Drawing and edge gestures
+Sketches are polylines in canvas pixels, built from the finger position while it is
+down (`MappedInputManager::isScreenTouchHeld`) and repainted with fast B/W refreshes at
+most every 120 ms. The Back edge swipe covers the left quarter of the screen, so a
+stroke that starts there would close the sketch: `Activity::capturesSwipes()` (an FOs
+hook in CrossPoint's base class) lets a screen keep its swipes while drawing, and the
+Back, Home and light-panel gestures skip it. Scripted simulator swipes now pass through
+intermediate points every 20 ms, like a finger.
+

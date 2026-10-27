@@ -9,6 +9,7 @@
 #include "fos/apps/calendar/CalendarActivity.h"
 #include "fos/apps/chess/ChessActivity.h"
 #include "fos/apps/lock/LockScreenActivity.h"
+#include "fos/apps/notes/NotesActivity.h"
 #include "fos/apps/reader/ReaderHomeActivity.h"
 #include "fos/apps/timers/TimerStore.h"
 #include "fos/apps/timers/TimersActivity.h"
@@ -82,6 +83,9 @@ void openApp(const AppId id) {
       break;
     case AppId::Calculator:
       app = std::make_unique<calc::CalculatorActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::Notes:
+      app = std::make_unique<notes::NotesActivity>(renderer, mappedInputManager);
       break;
     case AppId::Settings:
       app = std::make_unique<SettingsActivity>(renderer, mappedInputManager);

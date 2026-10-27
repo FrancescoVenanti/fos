@@ -48,7 +48,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] Lock screen (clock styles, weather, room climate, next event; sleep screen with timed refresh)
 - [x] Timers (Pomodoro, stopwatch with laps, countdown; run through sleep)
 - [x] Calculator (expression calculator, unit converter, synced currency rates)
-- [ ] Notes and sketch
+- [x] Notes and sketch (multi-line notes, freehand drawing with pen, eraser, undo)
 - [ ] Habits
 - [ ] Wallet
 - [ ] Flashcards

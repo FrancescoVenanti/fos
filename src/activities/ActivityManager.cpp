@@ -118,7 +118,9 @@ void ActivityManager::loop() {
   }
 
   if (currentActivity) {
-    if (!currentActivity->isHomeActivity() && mappedInput.wasHomeGesture()) {
+    // FOs: a screen that is being drawn on keeps its swipes.
+    const bool swipesFree = !currentActivity->capturesSwipes();
+    if (swipesFree && !currentActivity->isHomeActivity() && mappedInput.wasHomeGesture()) {
       if (currentActivity->handleHomeGesture()) {
         return;
       }
@@ -139,7 +141,7 @@ void ActivityManager::loop() {
       // The header back button shares this band; its taps stay Back.
       statusBarTap = mappedInput.wasScreenTapped(tx, ty) && ty < 44 && !HeaderBackTapTarget::contains(tx, ty);
     }
-    if (mappedInput.hasTouch() && currentActivity->name != "FrontlightPanel" &&
+    if (swipesFree && mappedInput.hasTouch() && currentActivity->name != "FrontlightPanel" &&
         (statusBarTap || mappedInput.wasLightPanelGesture())) {
       haptic_feedback::touchAction();
       pushActivity(std::make_unique<FrontlightPanelActivity>(renderer, mappedInput));
