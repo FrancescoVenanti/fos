@@ -83,6 +83,26 @@ class MockBackendTest(unittest.TestCase):
         _, after = self.call("/api/v1/terminal/session?after=%d" % session["lines"][-1]["seq"])
         self.assertTrue(any(l["kind"] == "assistant" for l in after["lines"]))
 
+    def test_sheet_answers_through_a_redirect(self):
+        # urllib follows the 302 like the device does.
+        cats = self.call("/gsheet/exec?action=categories&key=sheetkey")[1]
+        self.assertIn("nocat", [c["id"] for c in cats["expense"]])
+        self.assertEqual(self.call("/gsheet/exec?action=categories&key=wrong")[1], {"error": "unauthorized"})
+        body = {"key": "sheetkey", "action": "add", "clientId": "sheet-test-1", "type": "expense", "amount": 990,
+                "category": "spesa", "description": "Pane", "date": "2026-10-26"}
+        first = self.call("/gsheet/exec", body)[1]
+        again = self.call("/gsheet/exec", body)[1]
+        self.assertEqual((first["duplicate"], again["duplicate"]), (False, True))
+
+    def test_direct_sources(self):
+        self.assertIn("results", self.call("/direct/geocoding-api.open-meteo.com/v1/search?name=milano")[1])
+        self.assertIn("current", self.call("/direct/api.open-meteo.com/v1/forecast?latitude=1&longitude=2")[1])
+        self.assertIn("USD", self.call("/direct/api.frankfurter.app/latest?from=EUR")[1]["rates"])
+        with urllib.request.urlopen(self.base + "/ics/calendar.ics") as r:
+            text = r.read().decode("utf-8")
+        self.assertIn("BEGIN:VEVENT", text)
+        self.assertIn("RRULE:FREQ=WEEKLY", text)
+
     def test_key_required_when_set(self):
         server.Handler.key = "k"
         try:

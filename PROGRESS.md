@@ -37,6 +37,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] `tools/mock-backend` (Python stdlib) for every row of the sync table, with tests
 - [x] Sync service (`src/fos/sync/`): worker task, push then pull, per-app caches, started at boot
 - [x] Backend address and key in Settings > Accounts; sync now / last sync in Settings > Wi-Fi and sync
+- [x] Backend optional: Google Sheet (Budgeteer), iCal, Open-Meteo, Frankfurter as direct sources
 - [x] Online/offline tested in the simulator (`budgeteer-online` runs the mock backend, `budgeteer-offline` an unreachable one)
 
 ## Phase 7 — Apps

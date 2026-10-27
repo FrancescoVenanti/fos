@@ -14,6 +14,7 @@
 #include "fos/apps/todo/TodoActivity.h"
 #include "fos/launcher/LauncherActivity.h"
 #include "fos/settings/SettingsActivity.h"
+#include "fos/sync/Direct.h"
 #include "fos/ui/FosActivity.h"
 
 extern GfxRenderer renderer;
@@ -46,6 +47,7 @@ class PlaceholderActivity final : public ui::FosActivity {
 }  // namespace
 
 void initApps() {
+  sync::registerDirectSources();
   budget::init();
   // Loads the timers and raises the status-bar alert for one that ended
   // while the device was off or asleep.

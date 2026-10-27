@@ -1,0 +1,17 @@
+{
+  "description": "No backend: Calendar from an iCal link, lock screen weather from Open-Meteo (mocked)",
+  "sd": "direct-8799",
+  "backend": 8799,
+  "env": {"FOS_SIM_DIRECT_BASE": "http://127.0.0.1:8799"},
+  "steps": [
+    {"wait": 4000},
+    {"tap": [123, 330], "settle": 300},
+    {"wait": 4000},
+    {"shot": "calendar-ical"},
+    {"key": "DOWN"},
+    {"shot": "calendar-ical-p2"},
+    {"key": "SLEEP"},
+    {"wait": 1500},
+    {"shot": "lock-open-meteo"}
+  ]
+}

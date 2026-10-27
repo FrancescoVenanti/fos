@@ -46,3 +46,19 @@ the server also mimics the few Lichess endpoints FOs uses under `/lichess`:
 `GET /lichess/api/puzzle/daily` and
 `POST /lichess/api/board/game/<id>/move/<uci>`. Point the device at it with the
 Lichess server field in Settings > Accounts.
+
+## Direct sources (no backend)
+
+The device works without this backend: Budgeteer talks to a Google Sheet,
+weather comes from Open-Meteo, rates from Frankfurter and the calendar from an
+iCal link. For tests the server mimics those too:
+
+| Path | Stands in for |
+| --- | --- |
+| `/gsheet/exec` (key `sheetkey`) | The Budgeteer Apps Script web app (`tools/google-sheets`), with its 302 redirect |
+| `/ics/calendar.ics` | A secret iCal calendar address |
+| `/direct/api.open-meteo.com/...`, `/direct/geocoding-api.open-meteo.com/...` | Open-Meteo forecast and place search |
+| `/direct/api.frankfurter.app/latest` | Frankfurter exchange rates |
+
+The simulator sends public API calls to `/direct/<host>/...` when
+`FOS_SIM_DIRECT_BASE=http://127.0.0.1:8787` is set.

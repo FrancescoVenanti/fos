@@ -23,7 +23,12 @@ E enumFrom(JsonVariantConst value, E fallback, int count) {
 
 }  // namespace
 
-FosSettings::FosSettings() { resetLayout(); }
+FosSettings::FosSettings() {
+  resetLayout();
+#ifdef SIMULATOR
+  backendUrl = "http://127.0.0.1:8787";
+#endif
+}
 
 bool FosSettings::isVisible(const AppId id) const {
   // Settings can never be hidden.
@@ -101,13 +106,22 @@ bool FosSettings::load() {
   lockShowWeather = doc["lock"]["weather"] | true;
   lockShowClimate = doc["lock"]["climate"] | true;
   lockShowNextEvent = doc["lock"]["nextEvent"] | true;
+  weatherPlace = doc["lock"]["place"] | "";
 
   autoSync = doc["sync"]["auto"] | true;
 
   lichessToken = doc["accounts"]["lichessToken"] | "";
   lichessUrl = doc["accounts"]["lichessUrl"] | "https://lichess.org";
+#ifdef SIMULATOR
+  // The simulator's default backend is the local mock (tools/mock-backend).
   backendUrl = doc["accounts"]["backendUrl"] | "http://127.0.0.1:8787";
+#else
+  backendUrl = doc["accounts"]["backendUrl"] | "";
+#endif
   backendKey = doc["accounts"]["backendKey"] | "";
+  sheetUrl = doc["accounts"]["sheetUrl"] | "";
+  sheetKey = doc["accounts"]["sheetKey"] | "";
+  calendarUrl = doc["accounts"]["calendarUrl"] | "";
 
   swapUpDown = doc["buttons"]["swapUpDown"] | false;
   okAction = enumFrom(doc["buttons"]["ok"], OkAction::Back, 3);
@@ -150,6 +164,7 @@ bool FosSettings::save() const {
   lock["weather"] = lockShowWeather;
   lock["climate"] = lockShowClimate;
   lock["nextEvent"] = lockShowNextEvent;
+  lock["place"] = weatherPlace.c_str();
 
   JsonObject sync = doc["sync"].to<JsonObject>();
   sync["auto"] = autoSync;
@@ -159,6 +174,9 @@ bool FosSettings::save() const {
   accounts["lichessUrl"] = lichessUrl.c_str();
   accounts["backendUrl"] = backendUrl.c_str();
   accounts["backendKey"] = backendKey.c_str();
+  accounts["sheetUrl"] = sheetUrl.c_str();
+  accounts["sheetKey"] = sheetKey.c_str();
+  accounts["calendarUrl"] = calendarUrl.c_str();
 
   JsonObject buttons = doc["buttons"].to<JsonObject>();
   buttons["swapUpDown"] = swapUpDown;

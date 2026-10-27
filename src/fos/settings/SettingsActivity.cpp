@@ -54,6 +54,10 @@ enum Id : uint8_t {
   LAST_SYNC,
   LICHESS,
   LICHESS_URL,
+  SHEET_URL,
+  SHEET_KEY,
+  CALENDAR_URL,
+  WEATHER_PLACE,
   BACKEND_URL,
   BACKEND_KEY,
   SWAP_BUTTONS,
@@ -239,6 +243,8 @@ void SettingsActivity::rebuild() {
       addChoice(CLOCK_STYLE, "CLOCK STYLE", CLOCK_STYLES, 3, static_cast<int>(s.clockStyle));
       addSection("ITEMS");
       addToggle(LOCK_WEATHER, "Weather", s.lockShowWeather, "From the last sync");
+      addNav(WEATHER_PLACE, "Weather place",
+             s.weatherPlace.empty() ? "Not set (backend weather only)" : s.weatherPlace);
       addToggle(LOCK_CLIMATE, "Room climate", s.lockShowClimate, "Onboard temperature and humidity");
       addToggle(LOCK_EVENT, "Next event", s.lockShowNextEvent, "From the calendar");
       break;
@@ -264,6 +270,12 @@ void SettingsActivity::rebuild() {
     case Page::Accounts:
       addNav(LICHESS, "Lichess API token", masked(s.lichessToken));
       addNav(LICHESS_URL, "Lichess server", s.lichessUrl);
+      addSection("BUDGETEER: GOOGLE SHEET");
+      addNav(SHEET_URL, "Sheet script address", s.sheetUrl.empty() ? "Not set (uses the backend)" : s.sheetUrl);
+      addNav(SHEET_KEY, "Sheet key", masked(s.sheetKey));
+      addSection("CALENDAR");
+      addNav(CALENDAR_URL, "Calendar link (iCal)", s.calendarUrl.empty() ? "Not set" : "Set");
+      addSection("SYNC BACKEND (OPTIONAL)");
       addNav(BACKEND_URL, "Backend address", s.backendUrl.empty() ? "Not set" : s.backendUrl);
       addNav(BACKEND_KEY, "Backend key", masked(s.backendKey));
       break;
@@ -601,6 +613,20 @@ void SettingsActivity::activate(const int index) {
       editText(LICHESS, "Lichess API token", s.lichessToken, true,
                "Create a personal token at lichess.org/account/oauth/token. Stored only on this device.");
       return;
+    case SHEET_URL:
+      editText(SHEET_URL, "Sheet script address", s.sheetUrl, false,
+               "The web app address of the FOs script in your budget sheet (tools/google-sheets).");
+      return;
+    case SHEET_KEY:
+      editText(SHEET_KEY, "Sheet key", s.sheetKey, true, "The FOS_KEY you set in the script's properties.");
+      return;
+    case CALENDAR_URL:
+      editText(CALENDAR_URL, "Calendar link (iCal)", s.calendarUrl, true,
+               "Google Calendar: Settings > your calendar > Secret address in iCal format.");
+      return;
+    case WEATHER_PLACE:
+      editText(WEATHER_PLACE, "Weather place", s.weatherPlace, false, "A city, e.g. Milano. Used without a backend.");
+      return;
     case LICHESS_URL:
       editText(LICHESS_URL, "Lichess server", s.lichessUrl, false, "Normally https://lichess.org");
       return;
@@ -689,6 +715,10 @@ void SettingsActivity::editText(const uint8_t id, const char* title, const std::
                            if (!text) return;
                            FosSettings& s = settings();
                            if (id == LICHESS) s.lichessToken = text->text;
+                           if (id == SHEET_URL) s.sheetUrl = text->text;
+                           if (id == SHEET_KEY) s.sheetKey = text->text;
+                           if (id == CALENDAR_URL) s.calendarUrl = text->text;
+                           if (id == WEATHER_PLACE) s.weatherPlace = text->text;
                            if (id == LICHESS_URL)
                              s.lichessUrl = text->text.empty() ? "https://lichess.org" : text->text;
                            if (id == BACKEND_URL) s.backendUrl = text->text;

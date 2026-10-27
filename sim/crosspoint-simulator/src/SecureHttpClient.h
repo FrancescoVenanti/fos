@@ -56,6 +56,10 @@ class SecureHttpClient {
     http_.setTimeout(static_cast<uint16_t>(ms > UINT16_MAX ? UINT16_MAX : ms));
   }
   void setReuse(bool reuse) { http_.setReuse(reuse); }
+  // FOs: like the SDK, follow up to maxHops redirects (curl -L).
+  void setFollowRedirects(int maxHops) {
+    http_.setFollowRedirects(maxHops > 0 ? HTTPC_STRICT_FOLLOW_REDIRECTS : HTTPC_DISABLE_FOLLOW_REDIRECTS);
+  }
 
   int GET() { return http_.GET(); }
   int POST(const String& payload) { return http_.POST(payload.c_str()); }

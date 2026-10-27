@@ -11,6 +11,7 @@
 
 #include "fos/core/Json.h"
 #include "fos/core/Status.h"
+#include "fos/settings/FosSettings.h"
 #include "fos/sync/Backend.h"
 #include "fos/sync/Sync.h"
 
@@ -24,7 +25,10 @@ constexpr size_t RECENT_PER_CATEGORY = 5;
 // The queue is appended on the main task and drained by the sync worker.
 std::mutex queueMutex;
 
-std::string monthCache(const char* ym) { return sync::cachePath(AppId::Budgeteer, "cache-month-") + ym; }
+// "/fos/budgeteer/cache-month-2026-10.json".
+std::string monthCache(const char* ym) {
+  return sync::cachePath(AppId::Budgeteer, (std::string("cache-month-") + ym).c_str());
+}
 
 void entryToJson(const Entry& e, JsonObject out) {
   out["clientId"] = e.clientId;
@@ -66,10 +70,92 @@ bool writeQueue(const std::vector<Entry>& entries) {
   return ok;
 }
 
-// Sends every queued entry. An entry leaves the queue only once the backend
-// confirms it (a repeat is confirmed as a duplicate), so a lost reply can at
-// worst make the backend see it twice, and it drops the repeat by clientId.
-bool push() {
+bool useSheet() { return !settings().sheetUrl.empty(); }
+
+// "<sheet url>?action=...&key=..." (the Apps Script web app).
+std::string sheetUrl(const std::string& query) {
+  const std::string& base = settings().sheetUrl;
+  return base + (base.find('?') == std::string::npos ? "?" : "&") + query +
+         "&key=" + net::urlEncode(settings().sheetKey);
+}
+
+// Apps Script answers 200 with {"error": ...} on failure.
+bool sheetOk(const net::Response& r, JsonDocument& doc) {
+  if (!r.ok() || deserializeJson(doc, r.body)) return false;
+  if (!doc["error"].isNull()) {
+    LOG_ERR("BUDGET", "Sheet: %s", doc["error"].as<const char*>());
+    return false;
+  }
+  return true;
+}
+
+enum class Sent : uint8_t { Confirmed, Unreachable, Rejected };
+
+Sent send(const Entry& e, const bool backend) {
+  JsonDocument doc;
+  entryToJson(e, doc.to<JsonObject>());
+  if (useSheet()) {
+    doc["action"] = "add";
+    doc["key"] = settings().sheetKey;
+    std::string body;
+    serializeJson(doc, body);
+    const net::Response r = net::request("POST", settings().sheetUrl, body, "", 20000);
+    if (r.status < 0 || r.status >= 500) return Sent::Unreachable;
+    JsonDocument reply;
+    return sheetOk(r, reply) && (reply["ok"] | false) ? Sent::Confirmed : Sent::Rejected;
+  }
+  if (!backend) return Sent::Unreachable;
+  std::string body;
+  serializeJson(doc, body);
+  const net::Response r = net::backendPost("/api/v1/budgeteer/transactions", body);
+  if (r.ok()) return Sent::Confirmed;
+  return r.status < 0 || r.status >= 500 ? Sent::Unreachable : Sent::Rejected;
+}
+
+// Months the open screen wants downloaded (the current one is always added).
+std::mutex monthsMutex;
+std::vector<std::string> wantedMonths;
+
+// Downloads categories and the wanted months from the sheet or the backend.
+bool fetch(const bool backend) {
+  if (!useSheet() && !backend) return false;
+  std::vector<std::string> months;
+  {
+    std::lock_guard<std::mutex> lock(monthsMutex);
+    months = wantedMonths;
+  }
+  std::tm t{};
+  if (localNow(t)) {
+    char now[8];
+    formatYm(t.tm_year + 1900, t.tm_mon, now, sizeof(now));
+    if (std::find(months.begin(), months.end(), now) == months.end()) months.emplace_back(now);
+  }
+  if (!useSheet()) {
+    bool ok = sync::fetchToCache("/api/v1/budgeteer/categories", sync::cachePath(AppId::Budgeteer, "cache-categories"));
+    for (const std::string& ym : months) {
+      ok = sync::fetchToCache("/api/v1/budgeteer/month?month=" + ym, monthCache(ym.c_str())) && ok;
+    }
+    return ok;
+  }
+  JsonDocument doc;
+  net::Response r = net::request("GET", sheetUrl("action=categories"), "", "", 20000);
+  if (!sheetOk(r, doc)) {
+    LOG_INF("BUDGET", "Sheet categories -> %d", r.status);
+    return false;
+  }
+  bool ok = sync::writeCache(sync::cachePath(AppId::Budgeteer, "cache-categories"), r.body);
+  for (const std::string& ym : months) {
+    r = net::request("GET", sheetUrl("action=month&month=" + ym), "", "", 20000);
+    JsonDocument month;
+    ok = sheetOk(r, month) && sync::writeCache(monthCache(ym.c_str()), r.body) && ok;
+  }
+  return ok;
+}
+
+// Sends every queued entry. An entry leaves the queue only once the sheet or
+// backend confirms it (a repeat is confirmed as a duplicate), so a lost reply
+// can at worst make it see the entry twice, and it drops the repeat by clientId.
+bool push(const bool backend) {
   std::vector<Entry> pending;
   {
     std::lock_guard<std::mutex> lock(queueMutex);
@@ -80,20 +166,16 @@ bool push() {
   std::vector<std::string> confirmed;
   bool reachable = true;
   for (const Entry& e : pending) {
-    JsonDocument doc;
-    entryToJson(e, doc.to<JsonObject>());
-    std::string body;
-    serializeJson(doc, body);
-    const net::Response r = net::backendPost("/api/v1/budgeteer/transactions", body);
-    if (r.ok()) {
+    const Sent result = send(e, backend);
+    if (result == Sent::Confirmed) {
       confirmed.push_back(e.clientId);
-    } else if (r.status < 0 || r.status >= 500) {
-      LOG_INF("BUDGET", "Send failed (%d); keeping %d queued", r.status, static_cast<int>(pending.size()));
+    } else if (result == Sent::Unreachable) {
+      LOG_INF("BUDGET", "Cannot send; keeping %d queued", static_cast<int>(pending.size()));
       reachable = false;
       break;
     } else {
-      // Rejected (4xx): keep it so nothing typed is lost, and go on.
-      LOG_ERR("BUDGET", "Backend rejected %s (%d)", e.clientId.c_str(), r.status);
+      // Rejected: keep it so nothing typed is lost, and go on.
+      LOG_ERR("BUDGET", "Rejected %s", e.clientId.c_str());
     }
   }
   if (!confirmed.empty()) {
@@ -130,6 +212,7 @@ void remember(const Entry& e) {
 
 void init() {
   sync::setPusher(AppId::Budgeteer, push);
+  sync::setFetcher(AppId::Budgeteer, fetch);
   setPendingCount(queuedCount());
 }
 
@@ -155,7 +238,7 @@ bool loadCategories(std::vector<Category>& out) {
 bool loadMonth(const char* ym, Month& out) {
   out = Month();
   JsonDocument doc;
-  if (!loadJson((monthCache(ym) + ".json").c_str(), doc)) return false;
+  if (!loadJson(monthCache(ym).c_str(), doc)) return false;
   JsonObjectConst data = doc["data"];
   JsonObjectConst totals = data["totals"];
   out.income = totals["income"] | 0LL;
@@ -178,7 +261,11 @@ bool loadMonth(const char* ym, Month& out) {
 }
 
 void requestMonth(const char* ym) {
-  sync::requestFetch(std::string("/api/v1/budgeteer/month?month=") + ym, monthCache(ym) + ".json");
+  {
+    std::lock_guard<std::mutex> lock(monthsMutex);
+    if (std::find(wantedMonths.begin(), wantedMonths.end(), ym) == wantedMonths.end()) wantedMonths.emplace_back(ym);
+  }
+  sync::request(AppId::Budgeteer);
 }
 
 bool enqueue(Entry entry) {

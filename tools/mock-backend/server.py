@@ -243,6 +243,45 @@ def month_view(month):
             "budgets": budgets, "transactions": txs}
 
 
+# --- direct sources (used by the device when there is no backend) -------------
+
+SHEET_KEY = "sheetkey"
+SHEET_REPLIES = {}  # echo id -> JSON body (Apps Script answers through a redirect)
+
+
+def ics_calendar():
+    """An iCal feed with the sample agenda, plus a weekly series."""
+    def stamp(d, hhmm):
+        return "%s%s00" % (d.strftime("%Y%m%d"), "T" + hhmm.replace(":", "")) if hhmm else d.strftime("%Y%m%d")
+
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//FOs mock//EN"]
+    base = today()
+    for i, ev in enumerate(agenda(7)):
+        d = dt.date.fromisoformat(ev["start"][:10])
+        lines += ["BEGIN:VEVENT", "UID:ics-%d" % i, "SUMMARY:%s (iCal)" % ev["title"]]
+        if ev["location"]:
+            lines.append("LOCATION:%s" % ev["location"].replace(",", "\\,"))
+        if ev["allDay"]:
+            lines += ["DTSTART;VALUE=DATE:%s" % stamp(d, None),
+                      "DTEND;VALUE=DATE:%s" % stamp(d + dt.timedelta(days=1), None)]
+        else:
+            lines += ["DTSTART;TZID=Europe/Rome:%s" % stamp(d, ev["start"][11:16]),
+                      "DTEND;TZID=Europe/Rome:%s" % stamp(d, ev["end"][11:16])]
+        lines.append("END:VEVENT")
+    # A weekly series that started months ago, with one week skipped.
+    start = base - dt.timedelta(days=70)
+    lines += ["BEGIN:VEVENT", "UID:ics-weekly", "SUMMARY:Piano lesson",
+              "DTSTART:%s" % stamp(start, "17:00"), "DTEND:%s" % stamp(start, "18:00"),
+              "RRULE:FREQ=WEEKLY", "EXDATE:%s" % stamp(start + dt.timedelta(days=7), "17:00"), "END:VEVENT"]
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(lines) + "\r\n"
+
+
+def open_meteo_forecast():
+    return {"current": {"temperature_2m": 12.3, "relative_humidity_2m": 81, "weather_code": 61},
+            "daily": {"temperature_2m_max": [15.1], "temperature_2m_min": [7.4]}}
+
+
 # --- HTTP -------------------------------------------------------------------
 
 class Handler(BaseHTTPRequestHandler):
@@ -294,6 +333,22 @@ class Handler(BaseHTTPRequestHandler):
             return self.status_page()
         if path.startswith("/lichess/"):
             return self.lichess_get(path[len("/lichess"):], q)
+        if path.startswith("/direct/"):
+            return self.direct_get(path[len("/direct/"):], q)
+        if path == "/ics/calendar.ics":
+            data = ics_calendar().encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/calendar; charset=utf-8")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
+        if path == "/gsheet/exec":
+            return self.sheet_redirect(self.sheet_get(q))
+        if path == "/gsheet/echo":
+            with LOCK:
+                body = SHEET_REPLIES.pop(q.get("id", ""), {"error": "expired"})
+            return self.send_json(200, body)
         if not self.authorized():
             return self.send_json(401, {"error": "unauthorized"})
         with LOCK:
@@ -336,6 +391,8 @@ class Handler(BaseHTTPRequestHandler):
         path = url.path.rstrip("/")
         if path.startswith("/lichess/"):
             return self.lichess_post(path[len("/lichess"):])
+        if path == "/gsheet/exec":
+            return self.sheet_redirect(self.sheet_post(self.body()))
         if not self.authorized():
             return self.send_json(401, {"error": "unauthorized"})
         payload = self.body()
@@ -372,6 +429,72 @@ class Handler(BaseHTTPRequestHandler):
                 ok = STATE.terminal.approve(payload.get("id"), bool(payload.get("approve")))
                 return self.send_json(200 if ok else 409, {"ok": ok})
         self.send_json(404, {"error": "not found", "path": path})
+
+    # Google Apps Script web app mock (tools/google-sheets/Budgeteer.gs): same
+    # actions and replies, and like Apps Script every answer comes through a
+    # 302 to a second URL, so the device's redirect handling is exercised.
+    def sheet_redirect(self, body):
+        with LOCK:
+            rid = uuid.uuid4().hex[:12]
+            SHEET_REPLIES[rid] = body
+        self.send_response(302)
+        self.send_header("Location", "/gsheet/echo?id=%s" % rid)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
+    def sheet_get(self, q):
+        if q.get("key") != SHEET_KEY:
+            return {"error": "unauthorized"}
+        with LOCK:
+            action = q.get("action")
+            if action == "health":
+                return {"ok": True, "server": "fos-sheet-mock"}
+            if action == "categories":
+                return {"income": [{"id": i, "name": n} for i, n in INCOME],
+                        "expense": [{"id": i, "name": n, "excludeFromBalance": i == "nocat"} for i, n in EXPENSE]}
+            if action == "month":
+                return month_view(q.get("month", today().strftime("%Y-%m")))
+        return {"error": "unknown action"}
+
+    def sheet_post(self, payload):
+        if payload is None:
+            return {"error": "invalid json"}
+        if payload.get("key") != SHEET_KEY:
+            return {"error": "unauthorized"}
+        if payload.get("action") != "add":
+            return {"error": "unknown action"}
+        missing = [k for k in ("clientId", "type", "amount", "category", "date") if k not in payload]
+        if missing:
+            return {"error": "missing " + ", ".join(missing)}
+        clean = {k: v for k, v in payload.items() if k != "key"}
+        self.record("sheet row", clean)
+        with LOCK:
+            if payload["clientId"] in STATE.client_ids:
+                return {"ok": True, "duplicate": True, "clientId": payload["clientId"]}
+            STATE.client_ids.add(payload["clientId"])
+            STATE.transactions.append({"id": str(uuid.uuid4()), "date": payload["date"], "type": payload["type"],
+                                       "category": payload["category"], "amount": int(payload["amount"]),
+                                       "description": payload.get("description", "")})
+            self.save_state()
+        return {"ok": True, "duplicate": False, "clientId": payload["clientId"]}
+
+    # Public APIs the device calls without a backend (FOS_SIM_DIRECT_BASE in
+    # the simulator sends https://<host>/<path> here as /direct/<host>/<path>).
+    def direct_get(self, rest, q):
+        host, _, path = rest.partition("/")
+        path = "/" + path
+        if host == "geocoding-api.open-meteo.com" and path == "/v1/search":
+            name = q.get("name", "")
+            if name.lower() in ("nowhere", ""):
+                return self.send_json(200, {"generationtime_ms": 0.1})
+            return self.send_json(200, {"results": [{"name": name.title(), "latitude": 45.4643,
+                                                     "longitude": 9.1895, "country": "Italia"}]})
+        if host == "api.open-meteo.com" and path == "/v1/forecast":
+            return self.send_json(200, open_meteo_forecast())
+        if host == "api.frankfurter.app" and path == "/latest":
+            return self.send_json(200, {"amount": 1.0, "base": "EUR", "date": iso(today()),
+                                        "rates": {"USD": 1.0901, "GBP": 0.8402, "CHF": 0.9377, "JPY": 163.1}})
+        return self.send_json(404, {"error": "not found", "host": host, "path": path})
 
     # Minimal Lichess-compatible mock (only what FOs uses). Point Settings >
     # Accounts > Lichess server at http://<host>:8787/lichess to use it.

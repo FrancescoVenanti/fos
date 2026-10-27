@@ -1,0 +1,20 @@
+{
+  "description": "Budgeteer on a Google Sheet (mock Apps Script, with its redirect), no backend: queue sent, month shown, new entry sent",
+  "sd": ["budget-offline", "sheet-8799"],
+  "backend": 8799,
+  "steps": [
+    {"tap": [123, 175], "settle": 300},
+    {"wait": 6000},
+    {"shot": "summary"},
+    {"tap": [240, 746]},
+    {"tap": [240, 330]},
+    {"tap": [239, 453]},
+    {"tap": [239, 649]},
+    {"tap": [240, 746]},
+    {"tap": [355, 298]},
+    {"tap": [70, 238]},
+    {"tap": [240, 746]},
+    {"tap": [240, 746], "settle": 6000},
+    {"shot": "after-save"}
+  ]
+}

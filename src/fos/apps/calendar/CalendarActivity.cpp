@@ -284,7 +284,7 @@ void CalendarActivity::onTick() {
   if (gen != seenGen_ && !sync::busy()) {
     seenGen_ = gen;
     checked_ = true;
-    online_ = sync::lastRunOnline();
+    online_ = sync::appOnline(AppId::Calendar);
     reload();
     rebuild();
     refresh(true);

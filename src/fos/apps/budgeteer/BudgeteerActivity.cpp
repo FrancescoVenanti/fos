@@ -381,7 +381,7 @@ void BudgeteerActivity::onTick() {
   const uint32_t gen = sync::generation();
   if (gen == seenGen_ || sync::busy()) return;
   seenGen_ = gen;
-  if (state_ == State::Checking) state_ = sync::lastRunOnline() ? State::Online : State::Offline;
+  if (state_ == State::Checking) state_ = sync::appOnline(AppId::Budgeteer) ? State::Online : State::Offline;
   reload();
   if (page_ >= pageCount()) page_ = 0;
   refresh(true);

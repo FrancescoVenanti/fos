@@ -239,3 +239,27 @@ failed send takes the move back. Settings > Accounts has a "Lichess server" fiel
 tests point at `tools/mock-backend` (`/lichess`). Live opponent moves are not streamed:
 the game list reloads when you return to it.
 
+## D28 — The backend is optional; direct sources per app
+The device works with no backend at all. The sync worker asks each app's fetcher to
+refresh its cache; a fetcher uses the backend when it answers and a direct source
+otherwise, and writes the same cache file either way, so the apps do not know which one
+was used. Explicit settings win over the backend:
+- **Budgeteer**: a Google Sheet through an Apps Script web app bound to the sheet
+  (`tools/google-sheets/Budgeteer.gs`). The script runs as the owner, so the device needs
+  no Google login: only the web app URL and a key (script property `FOS_KEY`). Apps
+  Script answers every request with a 302; the HTTP layer now follows redirects (a POST
+  continues as GET, as browsers do). Duplicates are dropped by `clientId` in the script.
+  Without a sheet URL, Budgeteer uses the backend as before.
+- **Calendar**: a secret iCal address, downloaded as a stream and parsed on the device
+  (`calendar::IcsReader`): only events in the 7-day window are kept, with RRULE
+  expansion (daily, weekly with BYDAY, monthly, yearly; interval, count, until),
+  EXDATE, moved occurrences and cancellations. TZID times are read as local time.
+- **Weather**: Open-Meteo for Settings > Lock screen > Weather place (geocoded once into
+  `/fos/lockscreen/place.json`; the worker never writes the settings file).
+- **Currency rates**: the backend, else Frankfurter (ECB rates, no key).
+- Flashcards, Wallet, Read-later and Puzzles read files from the microSD when there is
+  no backend; the terminal needs its relay (see the apps).
+`sync::appOnline(app)` reports each app's last result. The device's default backend
+address is now empty (the simulator keeps the local mock). Tests point public APIs at
+the mock with `FOS_SIM_DIRECT_BASE`.
+

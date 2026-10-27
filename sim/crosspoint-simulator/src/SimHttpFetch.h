@@ -238,7 +238,10 @@ inline bool fetchWithCurl(const std::string& url, const char* method, const std:
 #else
   cmd += " -w '%{http_code}'";
 #endif
-  if (method && std::string(method) != "GET") cmd += " -X " + shellQuote(method);
+  // FOs: a POST with a body is curl's default; leaving out -X lets -L turn it
+  // into a GET after 301/302/303, as the device client does (Apps Script).
+  const bool implicitPost = body && followRedirects && method && std::string(method) == "POST";
+  if (method && std::string(method) != "GET" && !implicitPost) cmd += " -X " + shellQuote(method);
   for (const auto& header : headers) {
     cmd += " -H " + shellQuote(header.first + ": " + header.second);
   }

@@ -4,6 +4,9 @@
 #include <SecureHttpClient.h>
 #include <WiFi.h>
 
+#include <cctype>
+#include <cstdlib>
+
 #include "WifiCredentialStore.h"
 #include "fos/settings/FosSettings.h"
 
@@ -71,6 +74,7 @@ Response request(const char* method, const std::string& url, const std::string& 
   // stays encrypted but the certificate is not verified.
   http.setInsecure();
   http.setTimeout(timeoutMs);
+  http.setFollowRedirects(5);
   http.setUserAgent("FOs");
   if (!http.begin(url)) return out;
   http.addHeader("Accept", "application/json");
@@ -80,6 +84,44 @@ Response request(const char* method, const std::string& url, const std::string& 
   if (out.status > 0) out.body = http.getString().c_str();
   http.end();
   if (out.status < 0) LOG_DBG("NET", "%s %s failed (%d)", method, url.c_str(), out.status);
+  return out;
+}
+
+int stream(const std::string& url, const std::function<bool(const uint8_t*, size_t)>& onData,
+           const unsigned long timeoutMs) {
+  freeink::SecureHttpClient http;
+  http.setInsecure();
+  http.setTimeout(timeoutMs);
+  http.setFollowRedirects(5);
+  http.setUserAgent("FOs");
+  if (!http.begin(url)) return -1;
+  const int status = http.GET(onData);
+  http.end();
+  if (status < 0) LOG_DBG("NET", "GET %s failed (%d)", url.c_str(), status);
+  return status;
+}
+
+std::string directUrl(const std::string& url) {
+#ifdef SIMULATOR
+  const char* base = std::getenv("FOS_SIM_DIRECT_BASE");
+  const size_t scheme = url.find("://");
+  if (base && *base && scheme != std::string::npos) return std::string(base) + "/direct/" + url.substr(scheme + 3);
+#endif
+  return url;
+}
+
+std::string urlEncode(const std::string& value) {
+  static constexpr char DIGITS[] = "0123456789ABCDEF";  // not HEX: an Arduino macro
+  std::string out;
+  for (const unsigned char ch : value) {
+    if (isalnum(ch) || ch == '-' || ch == '_' || ch == '.' || ch == '~') {
+      out += static_cast<char>(ch);
+    } else {
+      out += '%';
+      out += DIGITS[ch >> 4];
+      out += DIGITS[ch & 15];
+    }
+  }
   return out;
 }
 

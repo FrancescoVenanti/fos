@@ -26,17 +26,15 @@ struct Pull {
   const char* cacheName;
 };
 
-// What each app downloads (docs/PRODUCT.md, "Sync and configuration").
-// Budgeteer's month and the terminal session are fetched by those apps.
+// What the apps without a fetcher download from the backend (docs/PRODUCT.md,
+// "Sync and configuration"). Budgeteer, Calendar, Calculator and the lock
+// screen register fetchers with direct sources (Direct.cpp, BudgetStore.cpp);
+// the terminal session is fetched live by its app.
 constexpr Pull PULLS[] = {
-    {AppId::Budgeteer, "/api/v1/budgeteer/categories", "cache-categories"},
-    {AppId::Calendar, "/api/v1/calendar/agenda?days=7", "cache"},
     {AppId::ReadLater, "/api/v1/readlater/articles", "cache"},
     {AppId::Flashcards, "/api/v1/flashcards/decks", "cache"},
     {AppId::Puzzles, "/api/v1/puzzles/daily", "cache-daily"},
-    {AppId::Calculator, "/api/v1/calculator/rates", "cache-rates"},
     {AppId::Wallet, "/api/v1/wallet/codes", "cache"},
-    {AppId::LockScreen, "/api/v1/lockscreen/weather", "cache-weather"},
 };
 
 struct Job {
@@ -53,6 +51,8 @@ std::atomic<uint32_t> gen{0};
 std::atomic<bool> online{false};
 std::atomic<uint32_t> lastOk{0};
 Pusher pushers[APP_COUNT] = {};
+Fetcher fetchers[APP_COUNT] = {};
+std::atomic<bool> appOk[APP_COUNT];
 
 // Kept apart from /fos/settings.json so the worker never writes the settings
 // object that screens edit on the main task.
@@ -69,37 +69,53 @@ void saveState() {
   if (!saveJson(STATE_FILE, doc)) LOG_ERR("SYNC", "Cannot write %s", STATE_FILE);
 }
 
-bool pushAll(const AppId only) {
+bool pushAll(const AppId only, const bool backend) {
+  bool all = true;
   for (int i = 0; i < APP_COUNT; ++i) {
     if (!pushers[i]) continue;
     if (only != AppId::Count && static_cast<int>(only) != i) continue;
-    if (!pushers[i]()) return false;
+    all = pushers[i](backend) && all;
   }
-  return true;
+  return all;
 }
 
 void runJob(const Job& job) {
   if (!net::ensureWifi()) {
     LOG_INF("SYNC", "No Wi-Fi; staying offline");
     online = false;
+    for (auto& ok : appOk) ok = false;
     return;
   }
-  if (!net::backendOnline()) {
-    LOG_INF("SYNC", "Backend unreachable; staying offline");
-    online = false;
-    return;
-  }
-  online = true;
+  const bool backend = net::backendOnline();
+  if (!backend) LOG_INF("SYNC", "Backend unreachable or not set; using direct sources");
   if (!job.path.empty()) {
-    fetchToCache(job.path, job.cache);
+    online = backend && fetchToCache(job.path, job.cache);
     return;
   }
-  pushAll(job.app);
-  bool all = true;
-  for (const Pull& pull : PULLS) {
-    if (job.app != AppId::Count && pull.app != job.app) continue;
-    all = fetchToCache(pull.path, cachePath(pull.app, pull.cacheName)) && all;
+  pushAll(job.app, backend);
+  bool any = backend;
+  bool all = backend;
+  for (int i = 0; i < APP_COUNT; ++i) {
+    const AppId app = static_cast<AppId>(i);
+    if (job.app != AppId::Count && job.app != app) continue;
+    bool ok;
+    if (fetchers[i]) {
+      ok = fetchers[i](backend);
+    } else {
+      bool hasPull = false;
+      ok = backend;
+      for (const Pull& pull : PULLS) {
+        if (pull.app != app) continue;
+        hasPull = true;
+        if (backend) ok = fetchToCache(pull.path, cachePath(pull.app, pull.cacheName)) && ok;
+      }
+      if (!hasPull) continue;
+    }
+    appOk[i] = ok;
+    any = any || ok;
+    all = all && ok;
   }
+  online = any;
   if (all && job.app == AppId::Count) {
     lastOk = static_cast<uint32_t>(std::time(nullptr));
     saveState();
@@ -168,6 +184,16 @@ uint32_t generation() { return gen.load(); }
 
 bool lastRunOnline() { return online.load(); }
 
+bool appOnline(const AppId app) {
+  const int i = static_cast<int>(app);
+  return i >= 0 && i < APP_COUNT && appOk[i].load();
+}
+
+void setFetcher(const AppId app, const Fetcher fetcher) {
+  const int i = static_cast<int>(app);
+  if (i >= 0 && i < APP_COUNT) fetchers[i] = fetcher;
+}
+
 uint32_t lastSyncTime() { return lastOk.load(); }
 
 void setPusher(const AppId app, const Pusher pusher) {
@@ -183,11 +209,15 @@ bool fetchToCache(const std::string& path, const std::string& cacheFile) {
     LOG_INF("SYNC", "GET %s -> %d", path.c_str(), r.status);
     return false;
   }
+  return writeCache(cacheFile, r.body);
+}
+
+bool writeCache(const std::string& cacheFile, const std::string& body) {
   const size_t slash = cacheFile.rfind('/');
   if (slash != std::string::npos) Storage.mkdir(cacheFile.substr(0, slash).c_str());
   // Wrap the body untouched: {"fetched": unix, "data": <body>}.
   std::string doc = "{\"fetched\":" + std::to_string(static_cast<long long>(std::time(nullptr))) + ",\"data\":";
-  doc += r.body;
+  doc += body;
   doc += "}";
   const std::string tmp = cacheFile + ".tmp";
   if (!Storage.writeFile(tmp.c_str(), String(doc.c_str())) || !Storage.replaceFile(tmp.c_str(), cacheFile.c_str())) {
