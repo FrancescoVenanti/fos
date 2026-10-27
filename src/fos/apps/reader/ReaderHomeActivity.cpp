@@ -1,6 +1,9 @@
 #include "ReaderHomeActivity.h"
 
+#include <FsHelpers.h>
 #include <HalStorage.h>
+
+#include <algorithm>
 
 #include "RecentBooksStore.h"
 #include "activities/ActivityManager.h"
@@ -40,7 +43,50 @@ void ReaderHomeActivity::onEnter() {
     book.detail = b.author;
     books_.push_back(std::move(book));
   }
+  recentCount_ = books_.size();
+  // Books on the card not opened yet: everything in /books the reader can open.
+  std::vector<Book> fresh;
+  HalFile dir = Storage.open("/books");
+  if (dir && dir.isDirectory()) {
+    while (HalFile f = dir.openNextFile()) {
+      char name[256];
+      f.getName(name, sizeof(name));
+      const bool book = !f.isDirectory() && name[0] != '.' &&
+                        (FsHelpers::hasReflowableBookExtension(name) || FsHelpers::hasXtcExtension(name));
+      f.close();
+      if (!book) continue;
+      const std::string path = std::string("/books/") + name;
+      const bool known =
+          std::any_of(books_.begin(), books_.begin() + recentCount_, [&path](const Book& b) { return b.path == path; });
+      if (!known) fresh.push_back({path, fileTitle(path), "Not opened yet"});
+    }
+  }
+  if (dir) dir.close();
+  std::sort(fresh.begin(), fresh.end(), [](const Book& a, const Book& b) { return a.title < b.title; });
+  for (Book& b : fresh) books_.push_back(std::move(b));
+  page_ = 0;
   FosActivity::onEnter();
+}
+
+// Rows that fit under the Continue card (first page) or on a full page.
+int ReaderHomeActivity::listCapacity(const bool firstPage) const {
+  int h = bodyRect().h - HEADER_H - BORDER - GAP - (MIN_TARGET + SHADOW + GUTTER) - GAP - 28 - BORDER -
+          (MIN_TARGET + SHADOW + GAP);
+  if (firstPage && recentCount_ > 0) h -= CONTINUE_H + GAP * 2;
+  return std::max(1, h / ROW);
+}
+
+bool ReaderHomeActivity::onUp() {
+  if (page_ == 0) return false;
+  --page_;
+  return true;
+}
+
+bool ReaderHomeActivity::onDown() {
+  const int listed = static_cast<int>(books_.size()) - (recentCount_ > 0 ? 1 : 0);
+  if (listCapacity(true) + page_ * listCapacity(false) >= listed) return false;
+  ++page_;
+  return true;
 }
 
 void ReaderHomeActivity::draw(Canvas& c, const Rect& body) {
@@ -63,31 +109,50 @@ void ReaderHomeActivity::draw(Canvas& c, const Rect& body) {
     return;
   }
 
-  // The last book: the one thing that matters here, inverted.
   Rect inner = area.inset(GUTTER, 0);
-  const Rect card = inner.takeTop(CONTINUE_H);
-  const bool down = c.pressed(OPEN, 0);
-  c.fill(card, down ? Tone::White : Tone::Black);
-  c.frame(card, BORDER, Tone::Black);
-  const Tone ink = down ? Tone::Black : Tone::White;
-  Rect face = card.inset(18, 16);
-  c.textIn(face.takeTop(c.lineHeight(font::SMALL)), font::SMALL, "CONTINUE READING", ink, Align::Left, true);
-  face.takeTop(8);
-  const Rect footer = face.takeBottom(c.lineHeight(font::BODY));
-  face.takeTop(c.textWrapped(face, font::TITLE, books_[0].title.c_str(), ink, 2, true));
-  if (!books_[0].detail.empty()) c.textIn(footer, font::BODY, books_[0].detail.c_str(), ink, Align::Left);
-  c.hit(card, OPEN, 0);
-  inner.takeTop(GAP * 2);
+  // The list below the card: other recent books, then the books not opened yet.
+  const size_t firstListed = recentCount_ > 0 ? 1 : 0;
+  const int listed = static_cast<int>(books_.size() - firstListed);
+  const int cap1 = listCapacity(true);
+  const int cap = listCapacity(false);
+  const int pages = listed <= cap1 ? 1 : 1 + (listed - cap1 + cap - 1) / cap;
+  if (pages > 1) {
+    const Rect p = inner.takeBottom(MIN_TARGET + SHADOW + GAP);
+    pager(c, {p.x, p.y + GAP, p.w, MIN_TARGET + SHADOW - GAP}, page_, pages, PREV_PAGE, NEXT_PAGE);
+  }
 
-  if (books_.size() > 1) {
-    sectionLabel(c, inner.takeTop(28).inset(-GUTTER, 0), "RECENT");
-    rule(c, 0, inner.y, c.width());
-    inner.takeTop(BORDER);
-    for (size_t i = 1; i < books_.size() && inner.h >= ROW; ++i) {
-      const Rect r = inner.takeTop(ROW);
-      listRow(c, {0, r.y, c.width(), r.h}, books_[i].title.c_str(), books_[i].detail.c_str(), nullptr, OPEN,
-              static_cast<int16_t>(i));
+  if (page_ == 0 && recentCount_ > 0) {
+    // The last book: the one thing that matters here, inverted.
+    const Rect card = inner.takeTop(CONTINUE_H);
+    const bool down = c.pressed(OPEN, 0);
+    c.fill(card, down ? Tone::White : Tone::Black);
+    c.frame(card, BORDER, Tone::Black);
+    const Tone ink = down ? Tone::Black : Tone::White;
+    Rect face = card.inset(18, 16);
+    c.textIn(face.takeTop(c.lineHeight(font::SMALL)), font::SMALL, "CONTINUE READING", ink, Align::Left, true);
+    face.takeTop(8);
+    const Rect footer = face.takeBottom(c.lineHeight(font::BODY));
+    face.takeTop(c.textWrapped(face, font::TITLE, books_[0].title.c_str(), ink, 2, true));
+    if (!books_[0].detail.empty()) c.textIn(footer, font::BODY, books_[0].detail.c_str(), ink, Align::Left);
+    c.hit(card, OPEN, 0);
+    inner.takeTop(GAP * 2);
+  }
+
+  const int start = static_cast<int>(firstListed) + (page_ == 0 ? 0 : cap1 + (page_ - 1) * cap);
+  const int end = std::min(static_cast<int>(books_.size()), start + (page_ == 0 ? cap1 : cap));
+  int shownSection = -1;  // 0 recent, 1 on the card
+  for (int i = start; i < end; ++i) {
+    const int section = i < static_cast<int>(recentCount_) ? 0 : 1;
+    if (section != shownSection) {
+      shownSection = section;
+      sectionLabel(c, inner.takeTop(28).inset(-GUTTER, 0), section == 0 ? "RECENT" : "ON THE CARD");
+      rule(c, 0, inner.y, c.width());
+      inner.takeTop(BORDER);
     }
+    if (inner.h < ROW) break;
+    const Rect r = inner.takeTop(ROW);
+    listRow(c, {0, r.y, c.width(), r.h}, books_[i].title.c_str(), books_[i].detail.c_str(), nullptr, OPEN,
+            static_cast<int16_t>(i));
   }
 }
 
@@ -104,6 +169,12 @@ void ReaderHomeActivity::onAction(const uint16_t action, const int16_t value) {
       return;
     case LIBRARY:
       activityManager.goToLibrary();
+      return;
+    case PREV_PAGE:
+      if (onUp()) requestUpdate();
+      return;
+    case NEXT_PAGE:
+      if (onDown()) requestUpdate();
       return;
     case FILES:
       activityManager.goToFileBrowser(Storage.exists("/books") ? "/books" : "/");

@@ -23,7 +23,11 @@ class ReaderHomeActivity final : public ui::FosActivity {
   void onAction(uint16_t action, int16_t value) override;
 
  private:
-  enum Action : uint16_t { BACK = 1, OPEN, LIBRARY, FILES };
+  enum Action : uint16_t { BACK = 1, OPEN, LIBRARY, FILES, PREV_PAGE, NEXT_PAGE };
+
+  bool onUp() override;
+  bool onDown() override;
+  int listCapacity(bool firstPage) const;
 
   struct Book {
     std::string path;
@@ -31,7 +35,9 @@ class ReaderHomeActivity final : public ui::FosActivity {
     std::string detail;
   };
 
-  std::vector<Book> books_;
+  int page_ = 0;
+  std::vector<Book> books_;  // recent books first, then the rest of /books
+  size_t recentCount_ = 0;
 };
 
 }  // namespace fos::reader
