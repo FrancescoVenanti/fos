@@ -51,7 +51,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] Notes and sketch (multi-line notes, freehand drawing with pen, eraser, undo)
 - [x] Habits (daily checklist, streaks, 5-week grid)
 - [x] Wallet (QR, Code 128, EAN-13 drawn on the device; synced or on the card)
-- [ ] Flashcards
+- [x] Flashcards (spaced repetition on the device; synced decks and CSV files)
 - [ ] Read-later
 - [ ] Puzzles
 - [x] Calendar (read-only 7-day agenda, last copy offline)

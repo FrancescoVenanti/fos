@@ -1,0 +1,19 @@
+{
+  "description": "Flashcards: synced decks plus a CSV deck, review with show answer and grades",
+  "sd": ["backend-8799", "flashcards-csv"],
+  "backend": 8799,
+  "steps": [
+    {"tap": [123, 640], "settle": 4000},
+    {"shot": "decks"},
+    {"tap": [240, 224]},
+    {"shot": "front"},
+    {"key": "ENTER"},
+    {"shot": "answer"},
+    {"tap": [298, 741]},
+    {"shot": "next-card"},
+    {"key": "ENTER"},
+    {"tap": [62, 741]},
+    {"key": "BACK"},
+    {"shot": "decks-after"}
+  ]
+}
