@@ -1,0 +1,20 @@
+{
+  "description": "Read-later: synced articles plus a text file from the card, read an article over pages, mark as read (sent back)",
+  "sd": ["backend-8799", "readlater-file"],
+  "backend": 8799,
+  "steps": [
+    {"tap": [353, 485], "settle": 4000},
+    {"shot": "unread"},
+    {"tap": [240, 245]},
+    {"shot": "article-p1"},
+    {"tap": [400, 400]},
+    {"shot": "article-p2"},
+    {"key": "DOWN"},
+    {"key": "DOWN"},
+    {"shot": "last-page"},
+    {"tap": [330, 750], "settle": 4000},
+    {"shot": "after-read"},
+    {"tap": [345, 165]},
+    {"shot": "read-tab"}
+  ]
+}

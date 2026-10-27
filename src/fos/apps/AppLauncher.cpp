@@ -13,6 +13,7 @@
 #include "fos/apps/lock/LockScreenActivity.h"
 #include "fos/apps/notes/NotesActivity.h"
 #include "fos/apps/reader/ReaderHomeActivity.h"
+#include "fos/apps/readlater/ReadLaterActivity.h"
 #include "fos/apps/timers/TimerStore.h"
 #include "fos/apps/timers/TimersActivity.h"
 #include "fos/apps/todo/TodoActivity.h"
@@ -54,6 +55,7 @@ class PlaceholderActivity final : public ui::FosActivity {
 void initApps() {
   sync::registerDirectSources();
   budget::init();
+  readlater::init();
   // Loads the timers and raises the status-bar alert for one that ended
   // while the device was off or asleep.
   timers::update();
@@ -98,6 +100,9 @@ void openApp(const AppId id) {
       break;
     case AppId::Flashcards:
       app = std::make_unique<cards::FlashcardsActivity>(renderer, mappedInputManager);
+      break;
+    case AppId::ReadLater:
+      app = std::make_unique<readlater::ReadLaterActivity>(renderer, mappedInputManager);
       break;
     case AppId::Settings:
       app = std::make_unique<SettingsActivity>(renderer, mappedInputManager);
