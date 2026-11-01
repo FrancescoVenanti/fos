@@ -23,18 +23,13 @@ E enumFrom(JsonVariantConst value, E fallback, int count) {
 
 }  // namespace
 
-FosSettings::FosSettings() {
-  resetLayout();
-#ifdef SIMULATOR
-  backendUrl = "http://127.0.0.1:8787";
-#endif
-}
+FosSettings::FosSettings() { resetLayout(); }
 
 bool FosSettings::isVisible(const AppId id) const {
   // Settings can never be hidden.
   if (id == AppId::Settings) return true;
   const int i = static_cast<int>(id);
-  return i >= 0 && i < APP_COUNT && visible[i];
+  return isAvailable(id) && visible[i];
 }
 
 void FosSettings::setVisible(const AppId id, const bool show) {
@@ -57,8 +52,11 @@ void FosSettings::move(const AppId id, const int delta) {
   for (int i = 0; i < APP_COUNT; ++i) {
     if (order[i] == static_cast<uint8_t>(id)) at = i;
   }
-  const int to = at + delta;
-  if (at < 0 || to < 0 || to >= APP_COUNT) return;
+  if (at < 0) return;
+  // Step over retired apps, which keep a hidden place in the order.
+  int to = at + delta;
+  while (to >= 0 && to < APP_COUNT && !isAvailable(static_cast<AppId>(order[to]))) to += delta;
+  if (to < 0 || to >= APP_COUNT) return;
   std::swap(order[at], order[to]);
 }
 
@@ -105,23 +103,10 @@ bool FosSettings::load() {
   clockStyle = enumFrom(doc["lock"]["clockStyle"], ClockStyle::Large, 3);
   lockShowWeather = doc["lock"]["weather"] | true;
   lockShowClimate = doc["lock"]["climate"] | true;
-  lockShowNextEvent = doc["lock"]["nextEvent"] | true;
   weatherPlace = doc["lock"]["place"] | "";
-
-  autoSync = doc["sync"]["auto"] | true;
 
   lichessToken = doc["accounts"]["lichessToken"] | "";
   lichessUrl = doc["accounts"]["lichessUrl"] | "https://lichess.org";
-#ifdef SIMULATOR
-  // The simulator's default backend is the local mock (tools/mock-backend).
-  backendUrl = doc["accounts"]["backendUrl"] | "http://127.0.0.1:8787";
-#else
-  backendUrl = doc["accounts"]["backendUrl"] | "";
-#endif
-  backendKey = doc["accounts"]["backendKey"] | "";
-  sheetUrl = doc["accounts"]["sheetUrl"] | "";
-  sheetKey = doc["accounts"]["sheetKey"] | "";
-  calendarUrl = doc["accounts"]["calendarUrl"] | "";
   terminalUrl = doc["accounts"]["terminalUrl"] | "";
   terminalKey = doc["accounts"]["terminalKey"] | "";
 
@@ -165,20 +150,11 @@ bool FosSettings::save() const {
   lock["clockStyle"] = static_cast<int>(clockStyle);
   lock["weather"] = lockShowWeather;
   lock["climate"] = lockShowClimate;
-  lock["nextEvent"] = lockShowNextEvent;
   lock["place"] = weatherPlace.c_str();
-
-  JsonObject sync = doc["sync"].to<JsonObject>();
-  sync["auto"] = autoSync;
 
   JsonObject accounts = doc["accounts"].to<JsonObject>();
   accounts["lichessToken"] = lichessToken.c_str();
   accounts["lichessUrl"] = lichessUrl.c_str();
-  accounts["backendUrl"] = backendUrl.c_str();
-  accounts["backendKey"] = backendKey.c_str();
-  accounts["sheetUrl"] = sheetUrl.c_str();
-  accounts["sheetKey"] = sheetKey.c_str();
-  accounts["calendarUrl"] = calendarUrl.c_str();
   accounts["terminalUrl"] = terminalUrl.c_str();
   accounts["terminalKey"] = terminalKey.c_str();
 

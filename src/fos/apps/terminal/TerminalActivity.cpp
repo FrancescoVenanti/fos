@@ -7,8 +7,8 @@
 
 #include <algorithm>
 
+#include "fos/net/Net.h"
 #include "fos/settings/FosSettings.h"
-#include "fos/sync/Backend.h"
 #include "fos/ui/TextEntryActivity.h"
 
 namespace fos::terminal {
@@ -26,16 +26,12 @@ constexpr int PERMISSION_H = 190;
 constexpr int INPUT_H = CHIP_H + GAP + MIN_TARGET + SHADOW + GUTTER;
 
 std::string baseUrl() {
-  const FosSettings& s = settings();
-  std::string url = s.terminalUrl.empty() ? s.backendUrl : s.terminalUrl;
+  std::string url = settings().terminalUrl;
   if (!url.empty() && url.back() == '/') url.pop_back();
   return url;
 }
 
-std::string bearer() {
-  const FosSettings& s = settings();
-  return s.terminalUrl.empty() ? s.backendKey : s.terminalKey;
-}
+std::string bearer() { return settings().terminalKey; }
 
 const char* prefix(const uint8_t kind) {
   switch (kind) {

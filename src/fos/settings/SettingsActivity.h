@@ -82,7 +82,6 @@ class SettingsActivity final : public ui::FosActivity {
   int listPage_ = 0;
   uint8_t confirmId_ = 0;  // item id waiting for dialog confirmation, 0 = none
   unsigned long lastBatteryAt_ = 0;
-  uint32_t syncGen_ = 0;
 };
 
 }  // namespace fos

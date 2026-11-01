@@ -9,9 +9,7 @@
 namespace fos::calc {
 
 // Calculator (docs/PRODUCT.md): a standard calculator and a unit converter
-// (length, weight, volume, temperature, currency). Currency rates come from
-// the sync (backend or Frankfurter) and are cached; the converter says how old
-// they are. Up/Down switch between the two tabs.
+// (length, weight, volume, temperature).
 class CalculatorActivity final : public ui::FosActivity {
  public:
   CalculatorActivity(GfxRenderer& renderer, MappedInputManager& mappedInput);
@@ -24,7 +22,6 @@ class CalculatorActivity final : public ui::FosActivity {
   void onAction(uint16_t action, int16_t value) override;
   bool onUp() override;
   bool onDown() override;
-  void onTick() override;
 
  private:
   enum Action : uint16_t {
@@ -43,7 +40,7 @@ class CalculatorActivity final : public ui::FosActivity {
 
   struct Unit {
     std::string name;
-    double factor = 1;  // to the category's base unit (for currency: units per EUR)
+    double factor = 1;  // to the category's base unit
   };
 
   // Calculator
@@ -75,8 +72,6 @@ class CalculatorActivity final : public ui::FosActivity {
   ui::Keypad keypad_;
   std::string valueText_;
   std::string resultText_;
-  std::string ratesNote_;
-  uint32_t seenGen_ = 0;
 };
 
 }  // namespace fos::calc

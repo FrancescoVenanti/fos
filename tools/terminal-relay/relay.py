@@ -9,7 +9,7 @@ Run it in the project folder you want Claude to work in:
 It prints the address and key to enter on the device (Settings > Accounts >
 Terminal relay). Standard library only.
 
-API (the same as the backend's terminal rows, so the device app is one client):
+API the device's Terminal app calls:
     GET  /api/v1/terminal/session?after=<seq>  -> {"session", "connected", "lines": [...], "permission"}
     POST /api/v1/terminal/prompt   {"text"}
     POST /api/v1/terminal/approval {"id", "approve"}

@@ -16,7 +16,6 @@
 #include <cstdio>
 #include <cstring>
 
-#include "fos/apps/calendar/CalendarStore.h"
 #include "fos/apps/timers/TimerStore.h"
 #include "fos/core/Json.h"
 #include "fos/core/Status.h"
@@ -80,45 +79,6 @@ void captureWeather(Snapshot& s, const std::time_t now) {
       snprintf(age, sizeof(age), "%ld days ago", hours / 24);
     }
     s.weatherAge = age;
-  }
-}
-
-void captureEvent(Snapshot& s) {
-  calendar::Agenda agenda;
-  if (!calendar::loadAgenda(agenda)) return;
-  const std::string now = calendar::nowStamp();
-  const calendar::Event* e = calendar::nextEvent(agenda, now);
-  if (!e) return;
-  s.hasEvent = true;
-  s.eventTitle = e->title;
-  s.eventPlace = e->location;
-  std::string day;
-  const std::string today = now.substr(0, 10);
-  std::tm t{};
-  int y = 0;
-  int m = 0;
-  int d = 0;
-  if (e->date == today) {
-    day = "TODAY";
-  } else if (sscanf(e->date.c_str(), "%d-%d-%d", &y, &m, &d) == 3) {
-    t.tm_year = y - 1900;
-    t.tm_mon = m - 1;
-    t.tm_mday = d;
-    t.tm_hour = 12;
-    std::mktime(&t);
-    char label[24];
-    snprintf(label, sizeof(label), "%.3s %d %.3s", weekdayName(t.tm_wday), t.tm_mday, monthName(t.tm_mon));
-    day = label;
-    for (char& ch : day) ch = static_cast<char>(toupper(static_cast<unsigned char>(ch)));
-  }
-  if (e->allDay) {
-    s.eventWhen = day + ", ALL DAY";
-  } else {
-    std::tm start{};
-    sscanf(e->start.c_str(), "%d:%d", &start.tm_hour, &start.tm_min);
-    char clock[12];
-    formatClock(start, clock, sizeof(clock));
-    s.eventWhen = day + " " + clock;
   }
 }
 
@@ -284,7 +244,6 @@ void capture(Snapshot& s) {
     }
   }
   captureTimer(s);
-  if (cfg.lockShowNextEvent && !s.hasTimer) captureEvent(s);
 }
 
 void draw(Canvas& c, const Rect& area, const Snapshot& s, const bool asleep) {
@@ -331,7 +290,7 @@ void draw(Canvas& c, const Rect& area, const Snapshot& s, const bool asleep) {
   inner.takeTop(GAP * 2);
 
   // Weather and room climate side by side (or one full width).
-  const bool weatherCard = cfg.lockShowWeather;
+  const bool weatherCard = cfg.lockShowWeather && !cfg.weatherPlace.empty();
   const bool climateCard = cfg.lockShowClimate;
   if ((weatherCard || climateCard) && inner.h >= CARD_H) {
     Rect row = inner.takeTop(CARD_H);
@@ -346,7 +305,7 @@ void draw(Canvas& c, const Rect& area, const Snapshot& s, const bool asleep) {
         for (char& ch : label) ch = static_cast<char>(toupper(static_cast<unsigned char>(ch)));
         card(c, r, label.c_str(), s.temp, s.condition, s.weatherAge.empty() ? s.range : s.weatherAge);
       } else {
-        card(c, r, "WEATHER", "--", "Not synced yet", "");
+        card(c, r, "WEATHER", "--", "Not loaded yet", "");
       }
     }
     if (climateCard) {
@@ -358,7 +317,7 @@ void draw(Canvas& c, const Rect& area, const Snapshot& s, const bool asleep) {
     }
   }
 
-  // A timer, inverted, takes the next event's place.
+  // A running or ended timer, inverted: the one thing to notice.
   if (s.hasTimer && inner.h >= EVENT_H) {
     const Rect r = inner.takeTop(EVENT_H);
     c.fill(r, Tone::Black);
@@ -370,24 +329,6 @@ void draw(Canvas& c, const Rect& area, const Snapshot& s, const bool asleep) {
     c.textIn(face.takeTop(c.lineHeight(font::TITLE)), font::TITLE, s.timerTitle.c_str(), Tone::White, Align::Left,
              true);
     c.textIn(face.takeTop(c.lineHeight(font::BODY)), font::BODY, s.timerNote.c_str(), Tone::White, Align::Left);
-  } else if (cfg.lockShowNextEvent && inner.h >= EVENT_H) {
-    // Next event, inverted: the one thing to notice.
-    const Rect r = inner.takeTop(EVENT_H);
-    c.fill(r, Tone::Black);
-    Rect face = r.inset(16, 12);
-    if (s.hasEvent) {
-      const std::string label = "NEXT" + std::string(DOT) + s.eventWhen;
-      c.textIn(face.takeTop(c.lineHeight(font::SMALL)), font::SMALL, label.c_str(), Tone::White, Align::Left, true);
-      face.takeTop(4);
-      c.textIn(face.takeTop(c.lineHeight(font::TITLE)), font::TITLE, s.eventTitle.c_str(), Tone::White, Align::Left,
-               true);
-      if (!s.eventPlace.empty()) {
-        c.textIn(face.takeTop(c.lineHeight(font::BODY)), font::BODY, s.eventPlace.c_str(), Tone::White, Align::Left);
-      }
-    } else {
-      c.textIn(face.takeTop(c.lineHeight(font::SMALL)), font::SMALL, "NEXT", Tone::White, Align::Left, true);
-      c.textIn(face, font::TITLE, "Nothing planned", Tone::White, Align::Left, true);
-    }
   }
 
   // Footer.

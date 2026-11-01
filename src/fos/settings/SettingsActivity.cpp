@@ -12,7 +12,6 @@
 #include "fos/core/Storage.h"
 #include "fos/core/Version.h"
 #include "fos/settings/FosSettings.h"
-#include "fos/sync/Sync.h"
 #include "fos/ui/TextEntryActivity.h"
 
 namespace fos {
@@ -46,22 +45,13 @@ enum Id : uint8_t {
   CLOCK_STYLE,
   LOCK_WEATHER,
   LOCK_CLIMATE,
-  LOCK_EVENT,
   NETWORK_ROW,
   ADD_NETWORK,
-  AUTO_SYNC,
-  SYNC_NOW,
-  LAST_SYNC,
   LICHESS,
   LICHESS_URL,
-  SHEET_URL,
-  SHEET_KEY,
-  CALENDAR_URL,
   WEATHER_PLACE,
   TERMINAL_URL,
   TERMINAL_KEY,
-  BACKEND_URL,
-  BACKEND_KEY,
   SWAP_BUTTONS,
   OK_ACTION,
   KEYBOARD,
@@ -107,22 +97,6 @@ std::string masked(const std::string& secret) {
   return "\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2\xE2\x80\xA2 " + secret.substr(secret.size() - 4);
 }
 
-std::string lastSyncText() {
-  if (sync::busy()) return "Syncing now";
-  const uint32_t last = sync::lastSyncTime();
-  // generation() > 0: a run has finished since boot.
-  const char* prefix = sync::generation() > 0 && !sync::lastRunOnline() ? "Offline. Last: " : "";
-  if (last == 0) return std::string(prefix) + "Never";
-  const std::time_t t = last;
-  std::tm tm{};
-  localtime_r(&t, &tm);
-  char date[16];
-  char clock[12];
-  formatDate(tm, date, sizeof(date));
-  formatClock(tm, clock, sizeof(clock));
-  return std::string(prefix) + date + "  " + clock;
-}
-
 }  // namespace
 
 SettingsActivity::SettingsActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
@@ -144,7 +118,7 @@ const char* SettingsActivity::title() const {
     case Page::Lock:
       return "Lock screen";
     case Page::Wifi:
-      return "Wi-Fi and sync";
+      return "Wi-Fi";
     case Page::Accounts:
       return "Accounts";
     case Page::Buttons:
@@ -207,8 +181,8 @@ void SettingsActivity::rebuild() {
       addNav(NAV_APPS, "Apps and layout", "Show, hide and order apps, icon size");
       addNav(NAV_DISPLAY, "Display", "Font size, refresh, inverted colors");
       addNav(NAV_LOCK, "Lock screen", "Refresh, clock style, items");
-      addNav(NAV_WIFI, "Wi-Fi and sync", "Networks, auto-sync, sync now");
-      addNav(NAV_ACCOUNTS, "Accounts", "Lichess token, backend");
+      addNav(NAV_WIFI, "Wi-Fi", "Saved networks and their order");
+      addNav(NAV_ACCOUNTS, "Accounts", "Lichess, terminal relay");
       addNav(NAV_BUTTONS, "Buttons and keyboard", "Button mapping, layout, accents");
       addNav(NAV_POWER, "Power", "Sleep, battery");
       addNav(NAV_REGION, "Region and system", "Clock, date, units, storage, reset");
@@ -221,6 +195,7 @@ void SettingsActivity::rebuild() {
       addSection("APPS  (ORDER AND VISIBILITY)");
       for (int i = 0; i < APP_COUNT; ++i) {
         const auto id = static_cast<AppId>(s.order[i]);
+        if (!isAvailable(id)) continue;
         Item item{Kind::AppRow, APP_ROW, appInfo(id).name};
         item.on = s.isVisible(id);
         item.arg = static_cast<int16_t>(id);
@@ -244,11 +219,9 @@ void SettingsActivity::rebuild() {
                 indexOf(LOCK_VALUES, s.lockRefreshMinutes, 2));
       addChoice(CLOCK_STYLE, "CLOCK STYLE", CLOCK_STYLES, 3, static_cast<int>(s.clockStyle));
       addSection("ITEMS");
-      addToggle(LOCK_WEATHER, "Weather", s.lockShowWeather, "From the last sync");
-      addNav(WEATHER_PLACE, "Weather place",
-             s.weatherPlace.empty() ? "Not set (backend weather only)" : s.weatherPlace);
+      addToggle(LOCK_WEATHER, "Weather", s.lockShowWeather, "From Open-Meteo for the place below");
+      addNav(WEATHER_PLACE, "Weather place", s.weatherPlace.empty() ? "Not set" : s.weatherPlace);
       addToggle(LOCK_CLIMATE, "Room climate", s.lockShowClimate, "Onboard temperature and humidity");
-      addToggle(LOCK_EVENT, "Next event", s.lockShowNextEvent, "From the calendar");
       break;
 
     case Page::Wifi: {
@@ -262,27 +235,15 @@ void SettingsActivity::rebuild() {
       }
       if (networks.empty()) addInfo(INFO, "No saved networks", "");
       addButton(ADD_NETWORK, "Add network");
-      addSection("SYNC");
-      addToggle(AUTO_SYNC, "Auto-sync", s.autoSync, "At boot and when an app opens");
-      addInfo(LAST_SYNC, "Last sync", lastSyncText());
-      addButton(SYNC_NOW, "Sync now", true);
       break;
     }
 
     case Page::Accounts:
       addNav(LICHESS, "Lichess API token", masked(s.lichessToken));
       addNav(LICHESS_URL, "Lichess server", s.lichessUrl);
-      addSection("BUDGETEER: GOOGLE SHEET");
-      addNav(SHEET_URL, "Sheet script address", s.sheetUrl.empty() ? "Not set (uses the backend)" : s.sheetUrl);
-      addNav(SHEET_KEY, "Sheet key", masked(s.sheetKey));
-      addSection("CALENDAR");
-      addNav(CALENDAR_URL, "Calendar link (iCal)", s.calendarUrl.empty() ? "Not set" : "Set");
       addSection("TERMINAL RELAY");
-      addNav(TERMINAL_URL, "Relay address", s.terminalUrl.empty() ? "Not set (uses the backend)" : s.terminalUrl);
+      addNav(TERMINAL_URL, "Relay address", s.terminalUrl.empty() ? "Not set" : s.terminalUrl);
       addNav(TERMINAL_KEY, "Relay key", masked(s.terminalKey));
-      addSection("SYNC BACKEND (OPTIONAL)");
-      addNav(BACKEND_URL, "Backend address", s.backendUrl.empty() ? "Not set" : s.backendUrl);
-      addNav(BACKEND_KEY, "Backend key", masked(s.backendKey));
       break;
 
     case Page::Buttons:
@@ -299,7 +260,7 @@ void SettingsActivity::rebuild() {
       char pct[16];
       snprintf(pct, sizeof(pct), "%d%%", powerManager.getBatteryPercentage());
       addInfo(BATTERY, "Battery level", pct);
-      addToggle(SAVER, "Battery saver", s.batterySaver, "Longer refresh intervals, no auto-sync");
+      addToggle(SAVER, "Battery saver", s.batterySaver, "Hourly lock screen, no weather at boot");
       break;
     }
 
@@ -320,6 +281,7 @@ void SettingsActivity::rebuild() {
       addSection("FOs DATA ON THE MICROSD");
       for (int i = 0; i < APP_COUNT; ++i) {
         const auto id = static_cast<AppId>(i);
+        if (!isAvailable(id)) continue;
         char size[24];
         formatBytes(appDataBytes(id), size, sizeof(size));
         addInfo(INFO, appInfo(id).name, size);
@@ -473,8 +435,8 @@ void SettingsActivity::draw(Canvas& c, const Rect& body) {
   }
 
   if (confirmId_ == CLEAR_CACHES) {
-    dialog(c, "Clear caches?", "Removes the synced copies of all apps. Your own data and the Budgeteer queue stay.",
-           "Clear", DIALOG_OK, "Cancel", DIALOG_CANCEL);
+    dialog(c, "Clear caches?", "Removes downloaded copies (weather). Your own data stays.", "Clear", DIALOG_OK,
+           "Cancel", DIALOG_CANCEL);
   } else if (confirmId_ == FACTORY_RESET) {
     dialog(c, "Factory reset?", "Erases all FOs settings and app data on the microSD. Books stay.", "Reset", DIALOG_OK,
            "Cancel", DIALOG_CANCEL);
@@ -600,34 +562,13 @@ void SettingsActivity::activate(const int index) {
     case LOCK_CLIMATE:
       s.lockShowClimate = !s.lockShowClimate;
       break;
-    case LOCK_EVENT:
-      s.lockShowNextEvent = !s.lockShowNextEvent;
-      break;
     case ADD_NETWORK:
       startActivityForResult(std::make_unique<WifiSelectionActivity>(renderer, mappedInput, false),
                              [this](const ActivityResult&) { rebuild(); });
       return;
-    case AUTO_SYNC:
-      s.autoSync = !s.autoSync;
-      break;
-    case SYNC_NOW:
-      sync::syncNow();
-      rebuild();
-      return;
     case LICHESS:
       editText(LICHESS, "Lichess API token", s.lichessToken, true,
                "Create a personal token at lichess.org/account/oauth/token. Stored only on this device.");
-      return;
-    case SHEET_URL:
-      editText(SHEET_URL, "Sheet script address", s.sheetUrl, false,
-               "The web app address of the FOs script in your budget sheet (tools/google-sheets).");
-      return;
-    case SHEET_KEY:
-      editText(SHEET_KEY, "Sheet key", s.sheetKey, true, "The FOS_KEY you set in the script's properties.");
-      return;
-    case CALENDAR_URL:
-      editText(CALENDAR_URL, "Calendar link (iCal)", s.calendarUrl, true,
-               "Google Calendar: Settings > your calendar > Secret address in iCal format.");
       return;
     case TERMINAL_URL:
       editText(TERMINAL_URL, "Relay address", s.terminalUrl, false,
@@ -637,16 +578,10 @@ void SettingsActivity::activate(const int index) {
       editText(TERMINAL_KEY, "Relay key", s.terminalKey, true, "The key the relay prints when it starts.");
       return;
     case WEATHER_PLACE:
-      editText(WEATHER_PLACE, "Weather place", s.weatherPlace, false, "A city, e.g. Milano. Used without a backend.");
+      editText(WEATHER_PLACE, "Weather place", s.weatherPlace, false, "A city, e.g. Milano.");
       return;
     case LICHESS_URL:
       editText(LICHESS_URL, "Lichess server", s.lichessUrl, false, "Normally https://lichess.org");
-      return;
-    case BACKEND_URL:
-      editText(BACKEND_URL, "Backend address", s.backendUrl, false, "For example http://192.168.1.20:8787");
-      return;
-    case BACKEND_KEY:
-      editText(BACKEND_KEY, "Backend key", s.backendKey, true, "Sent with every sync request.");
       return;
     case SWAP_BUTTONS:
       s.swapUpDown = !s.swapUpDown;
@@ -727,16 +662,11 @@ void SettingsActivity::editText(const uint8_t id, const char* title, const std::
                            if (!text) return;
                            FosSettings& s = settings();
                            if (id == LICHESS) s.lichessToken = text->text;
-                           if (id == SHEET_URL) s.sheetUrl = text->text;
-                           if (id == SHEET_KEY) s.sheetKey = text->text;
-                           if (id == CALENDAR_URL) s.calendarUrl = text->text;
                            if (id == WEATHER_PLACE) s.weatherPlace = text->text;
                            if (id == TERMINAL_URL) s.terminalUrl = text->text;
                            if (id == TERMINAL_KEY) s.terminalKey = text->text;
                            if (id == LICHESS_URL)
                              s.lichessUrl = text->text.empty() ? "https://lichess.org" : text->text;
-                           if (id == BACKEND_URL) s.backendUrl = text->text;
-                           if (id == BACKEND_KEY) s.backendKey = text->text;
                            save();
                            rebuild();
                          });
@@ -776,12 +706,6 @@ void SettingsActivity::onBack() {
 }
 
 void SettingsActivity::onTick() {
-  // "Last sync" follows the sync worker while the Wi-Fi page is open.
-  if (page_ == Page::Wifi && sync::generation() != syncGen_) {
-    syncGen_ = sync::generation();
-    rebuild();
-    requestUpdate();
-  }
   // Keep the battery level fresh while the Power page is open.
   if (page_ == Page::Power && millis() - lastBatteryAt_ > 30000) {
     lastBatteryAt_ = millis();

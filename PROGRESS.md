@@ -33,28 +33,25 @@ Firmware size is reported for the `sticky` environment after each phase.
 - [x] Launcher: icon sizes S (3×5), M (2×4), L (1×4), labels on/off, pages
 - [x] Settings app (all sections from the spec), persisted on SD, never hideable
 
-## Phase 6 — Mock backend
-- [x] `tools/mock-backend` (Python stdlib) for every row of the sync table, with tests
-- [x] Sync service (`src/fos/sync/`): worker task, push then pull, per-app caches, started at boot
-- [x] Backend address and key in Settings > Accounts; sync now / last sync in Settings > Wi-Fi and sync
-- [x] Backend optional: Google Sheet (Budgeteer), iCal, Open-Meteo, Frankfurter as direct sources
-- [x] Online/offline tested in the simulator (`budgeteer-online` runs the mock backend, `budgeteer-offline` an unreachable one)
+## Phase 6 — Network (no backend)
+- [x] Background worker for per-app fetches; lock screen weather from Open-Meteo
+- [x] Direct services only: Open-Meteo, Lichess, the terminal relay
+- [x] Test-only mock for Lichess and Open-Meteo (`tools/simtest/mock`)
+- [x] Backend, Google Sheet bridge and sync settings removed (Nov 1, 2026)
 
 ## Phase 7 — Apps
-- [x] Budgeteer (offline queue, 6-step entry, month view)
+Removed on Nov 1, 2026: Budgeteer, Calendar, Read-later, Flashcards, Puzzles, the
+converter's currency tab and the lock screen's next event (see docs/DECISIONS.md D33).
+
 - [x] To-do (lists, due dates, recurring tasks, tap-to-complete)
 - [x] Chess (vs bot, 1v1, Lichess (mocked), blindfold trainer)
 - [x] Reader (CrossPoint)
-- [x] Lock screen (clock styles, weather, room climate, next event; sleep screen with timed refresh)
+- [x] Lock screen (clock styles, weather, room climate, running timer; sleep screen with timed refresh)
 - [x] Timers (Pomodoro, stopwatch with laps, countdown; run through sleep)
-- [x] Calculator (expression calculator, unit converter, synced currency rates)
+- [x] Calculator (expression calculator, unit converter)
 - [x] Notes and sketch (multi-line notes, freehand drawing with pen, eraser, undo)
 - [x] Habits (daily checklist, streaks, 5-week grid)
-- [x] Wallet (QR, Code 128, EAN-13 drawn on the device; synced or on the card)
-- [x] Flashcards (spaced repetition on the device; synced decks and CSV files)
-- [x] Read-later (synced articles or .txt files, paged reading view, read status sent back)
-- [x] Puzzles (Sudoku generated on the device in 4 levels; daily word from sync or a bundled pack)
-- [x] Calendar (read-only 7-day agenda, last copy offline)
+- [x] Wallet (QR, Code 128, EAN-13 drawn on the device; codes added on the device or on the card)
 - [x] Terminal (live transcript, quick replies, Approve/Deny; relay script for Claude Code)
 
 ## Size history (sticky)
@@ -74,3 +71,4 @@ Static RAM is of the 320 KB internal DRAM (8 MB PSRAM not counted); flash is of 
 | 7 (Reader, Chess) | 79,236 B (24.2%) | 5,614,831 B (85.7%) |
 | 7 (direct sources, Calculator) | 79,428 B (24.2%) | 5,650,131 B (86.2%) |
 | 7 (all apps) | 79,500 B (24.3%) | 5,738,619 B (87.6%) |
+| Debloat (no backend, 11 apps) | 79,252 B (24.2%) | 5,639,507 B (86.1%) |

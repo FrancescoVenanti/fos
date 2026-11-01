@@ -13,14 +13,12 @@ struct Code {
   std::string label;
   std::string payload;
   Format format = Format::Qr;
-  bool local = false;  // added on the device or copied to the card (deletable)
 };
 
-// Wallet (docs/PRODUCT.md): loyalty cards, tickets, boarding passes. Codes
-// come from the sync (/fos/wallet/cache.json) and from /fos/wallet/codes.json,
-// which holds the codes added on the device and can also be copied to the
-// microSD by hand (same format: {"codes": [{"label", "payload", "format"}]}),
-// so the wallet works without a backend.
+// Wallet (docs/PRODUCT.md): loyalty cards, tickets, boarding passes, kept in
+// /fos/wallet/codes.json: the codes added on the device, and codes copied to
+// the microSD by hand in the same format ({"codes": [{"label", "payload",
+// "format"}]}).
 class WalletActivity final : public ui::FosActivity {
  public:
   WalletActivity(GfxRenderer& renderer, MappedInputManager& mappedInput);
@@ -32,7 +30,6 @@ class WalletActivity final : public ui::FosActivity {
   void onAction(uint16_t action, int16_t value) override;
   bool onUp() override;
   bool onDown() override;
-  void onTick() override;
 
  private:
   enum Action : uint16_t { BACK = 1, OPEN, ADD, PREV_PAGE, NEXT_PAGE };
@@ -43,7 +40,6 @@ class WalletActivity final : public ui::FosActivity {
   std::vector<Code> codes_;
   std::vector<std::string> details_;
   int page_ = 0;
-  uint32_t seenGen_ = 0;
 };
 
 // One code, full screen at full contrast. Up/Down go to the previous/next code.

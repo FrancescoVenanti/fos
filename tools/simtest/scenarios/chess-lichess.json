@@ -1,9 +1,9 @@
 {
   "description": "Chess Lichess (mock): game list, open a game, send a move; daily puzzle, right move and reply",
   "sd": "lichess-8799",
-  "backend": 8799,
+  "mock": 8799,
   "steps": [
-    {"tap": [353, 640]},
+    {"tap": [353, 330]},
     {"tap": [240, 325], "settle": 3000},
     {"shot": "games"},
     {"tap": [240, 281], "settle": 1500},

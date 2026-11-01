@@ -12,7 +12,7 @@
 #include "GameActivity.h"
 #include "fos/core/Json.h"
 #include "fos/core/Status.h"
-#include "fos/sync/Backend.h"
+#include "fos/net/Net.h"
 
 namespace fos::chess {
 

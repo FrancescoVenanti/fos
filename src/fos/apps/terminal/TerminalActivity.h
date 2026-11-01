@@ -9,9 +9,9 @@
 namespace fos::terminal {
 
 // Terminal (docs/PRODUCT.md): a live client for a Claude Code session on the
-// computer, through the relay (tools/terminal-relay) or the backend, which
-// share one API: GET /api/v1/terminal/session?after=<seq>, POST
-// /api/v1/terminal/prompt, POST /api/v1/terminal/approval. It needs a network
+// computer, through the relay (tools/terminal-relay): GET
+// /api/v1/terminal/session?after=<seq>, POST /api/v1/terminal/prompt, POST
+// /api/v1/terminal/approval. It needs a network
 // and polls while open. The transcript is monospace and scrolls with Up/Down;
 // quick replies and the keyboard send prompts; a permission request shows
 // full-width Approve and Deny.

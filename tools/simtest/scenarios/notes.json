@@ -1,8 +1,7 @@
 {
   "description": "Notes: type a two-line note, list, view; draw a sketch with strokes, eraser, undo",
-  "sd": "backend-down",
   "steps": [
-    {"tap": [353, 330]},
+    {"tap": [353, 175]},
     {"shot": "empty"},
     {"tap": [123, 741]},
     {"tap": [240, 562]},

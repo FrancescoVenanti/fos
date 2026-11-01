@@ -301,3 +301,26 @@ The device polls every 3 s (1.2 s while waiting for a reply) only while the app 
 and turns Wi-Fi off on exit if it was off before. With Space Mono 8 pt about 52 columns
 fit on the 448 px transcript.
 
+
+## D33 — Debloat: no backend, fewer apps
+On Nov 1, 2026 the owner removed what did not fit their use: Budgeteer, Calendar,
+Read-later, Flashcards, Puzzles, the converter's currency tab, the lock screen's next
+event, the sync backend (`tools/mock-backend`) and the Google Sheet bridge
+(`tools/google-sheets`). D17, D18, D20, D21 (partly), D27's mock note, D28 and D31 describe
+what was removed and are kept as history.
+
+- **No backend at all.** The device calls three services directly, each optional:
+  Open-Meteo (lock screen weather, only when a place is set), Lichess and the terminal
+  relay on the PC. `src/fos/net/` holds the Wi-Fi and HTTP helpers; `src/fos/sync/` is a
+  small worker running per-app fetchers (today only the weather). A fetcher joins Wi-Fi
+  itself, so nothing turns the radio on when there is nothing to fetch.
+- **Settings:** backend address and key, sheet address and key, iCal link, next event,
+  auto-sync, sync now and last sync are gone. The weather card is hidden until a place is
+  set; battery saver skips the boot fetch. The status bar keeps only the timer tag.
+- **Wallet** reads only `/fos/wallet/codes.json` (codes added on the device or copied to the
+  card). **Terminal** talks only to the relay.
+- **Retired app ids:** `AppId` values are persisted (launcher order and hidden apps), so the
+  removed apps keep their values and are marked `retired` in `AppRegistry`; they are never
+  listed, opened or counted. Moving an app in Settings steps over them.
+- **Tests:** `tools/simtest/mock/server.py` stands in for Lichess and Open-Meteo only; the
+  runner's `"mock"` key starts it and `"relay"` starts the real relay with `--fake`.

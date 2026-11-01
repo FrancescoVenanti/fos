@@ -1,8 +1,7 @@
 {
   "description": "Chess vs bot: menu, setup, select a piece, move, bot reply, undo",
-  "sd": "backend-down",
   "steps": [
-    {"tap": [353, 640]},
+    {"tap": [353, 330]},
     {"shot": "menu"},
     {"tap": [240, 157]},
     {"tap": [330, 303]},

@@ -7,7 +7,6 @@
 #include <cstdio>
 
 #include "fos/core/Json.h"
-#include "fos/sync/Sync.h"
 #include "fos/ui/TextEntryActivity.h"
 
 namespace fos::wallet {
@@ -34,17 +33,16 @@ const char* formatKey(const Format f) {
   return "qr";
 }
 
-void readCodes(const char* path, const bool synced, std::vector<Code>& out) {
+void readCodes(std::vector<Code>& out) {
   JsonDocument doc;
-  if (!loadJson(path, doc)) return;
-  JsonArrayConst list = synced ? doc["data"]["codes"].as<JsonArrayConst>() : doc["codes"].as<JsonArrayConst>();
+  if (!loadJson(LOCAL_FILE, doc)) return;
+  JsonArrayConst list = doc["codes"];
   for (JsonObjectConst c : list) {
     Code code;
     code.id = c["id"] | "";
     code.label = c["label"] | "";
     code.payload = c["payload"] | "";
     code.format = parseFormat(c["kind"] | "", c["format"] | "");
-    code.local = !synced;
     if (!code.payload.empty()) out.push_back(std::move(code));
   }
 }
@@ -53,7 +51,6 @@ bool writeLocal(const std::vector<Code>& codes) {
   JsonDocument doc;
   JsonArray arr = doc["codes"].to<JsonArray>();
   for (const Code& c : codes) {
-    if (!c.local) continue;
     JsonObject o = arr.add<JsonObject>();
     o["id"] = c.id;
     o["label"] = c.label;
@@ -72,21 +69,15 @@ WalletActivity::WalletActivity(GfxRenderer& renderer, MappedInputManager& mapped
 
 void WalletActivity::onEnter() {
   reload();
-  seenGen_ = sync::generation();
-  sync::request(AppId::Wallet);
   FosActivity::onEnter();
 }
 
 void WalletActivity::reload() {
   codes_.clear();
-  readCodes(LOCAL_FILE, false, codes_);
-  readCodes(sync::cachePath(AppId::Wallet).c_str(), true, codes_);
+  readCodes(codes_);
   details_.clear();
   for (const Code& c : codes_) {
-    std::string d = formatName(c.format);
-    d += "  \xC2\xB7  ";
-    d += c.local ? "on this device" : "synced";
-    details_.push_back(std::move(d));
+    details_.emplace_back(formatName(c.format));
   }
   const int pages = std::max(1, (static_cast<int>(codes_.size()) + perPage() - 1) / perPage());
   if (page_ >= pages) page_ = pages - 1;
@@ -157,14 +148,6 @@ bool WalletActivity::onDown() {
   return true;
 }
 
-void WalletActivity::onTick() {
-  const uint32_t gen = sync::generation();
-  if (gen == seenGen_ || sync::busy()) return;
-  seenGen_ = gen;
-  reload();
-  refresh();
-}
-
 // --- one code -------------------------------------------------------------------
 
 CodeActivity::CodeActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, std::vector<Code> codes,
@@ -174,8 +157,7 @@ CodeActivity::CodeActivity(GfxRenderer& renderer, MappedInputManager& mappedInpu
 void CodeActivity::draw(Canvas& c, const Rect& body) {
   const Code& code = codes_[index_];
   Rect area = body;
-  header(c, area.takeTop(HEADER_H), code.label.c_str(), BACK, code.local ? "Delete" : nullptr,
-         code.local ? DELETE_CODE : 0);
+  header(c, area.takeTop(HEADER_H), code.label.c_str(), BACK, "Delete", DELETE_CODE);
   rule(c, 0, area.y, c.width());
   area.takeTop(BORDER);
   // Footer: position and format.
@@ -289,10 +271,10 @@ void AddCodeActivity::onAction(const uint16_t action, const int16_t value) {
         return;
       }
       std::vector<Code> all;
-      readCodes(LOCAL_FILE, false, all);
+      readCodes(all);
       char id[24];
       snprintf(id, sizeof(id), "local-%08lx", static_cast<unsigned long>(esp_random()));
-      all.push_back({id, label_, payload_, f, true});
+      all.push_back({id, label_, payload_, f});
       writeLocal(all);
       finish();
       return;

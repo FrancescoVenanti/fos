@@ -1,9 +1,10 @@
 {
   "description": "Lock screen app: analog clock, 12-hour clock, no climate card, old weather copy",
-  "sd": ["calendar-cache", "lock-old-weather", "lock-analog"],
+  "sd": ["lock-old-weather", "lock-analog"],
+  "env": {"FOS_SIM_DIRECT_BASE": "http://127.0.0.1:8798"},
   "steps": [
     {"key": "DOWN"},
-    {"tap": [123, 640]},
+    {"tap": [353, 175]},
     {"wait": 4000},
     {"shot": "analog"},
     {"key": "SLEEP"},

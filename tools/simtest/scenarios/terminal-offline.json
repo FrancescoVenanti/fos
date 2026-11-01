@@ -1,9 +1,8 @@
 {
   "description": "Terminal with no relay reachable",
-  "sd": "backend-down",
   "steps": [
     {"key": "DOWN"},
-    {"tap": [353, 485], "settle": 6000},
+    {"tap": [123, 175], "settle": 6000},
     {"shot": "not-connected"}
   ]
 }

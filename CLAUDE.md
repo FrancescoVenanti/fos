@@ -16,13 +16,14 @@ touch, microSD). It is a hard fork of [CrossPoint Reader](https://github.com/cro
 | --- | --- |
 | `src/main.cpp` | Arduino `setup()`/`loop()`: boot, sleep, input dispatch, activity loop |
 | `src/activities/` | CrossPoint screens (reader, library, settings, network, ...) |
-| `src/fos/` | **All FOs code**: design system, launcher, settings, apps, sync |
+| `src/fos/` | **All FOs code**: design system, launcher, settings, apps, network, weather fetch |
 | `src/fos/ui/` | Neo-brutalist design system (`Canvas`, components, keyboard, keypad) |
 | `src/fos/apps/` | One folder per FOs app |
 | `lib/` | CrossPoint libraries: `GfxRenderer`, `EpdFont`, `Epub`, `hal/`, ... |
 | `freeink-sdk/` | Submodule: board profiles (`BoardConfig.h` â†’ `STICKY`), drivers, FreeInkUI |
 | `sim/crosspoint-simulator/` | Vendored desktop simulator (MIT), ported to native Windows. Replaces `lib/hal` in the `simulator` env. Do not reformat it |
-| `tools/mock-backend/` | Python stdlib mock of the sync backend |
+| `tools/terminal-relay/` | Relay that runs Claude Code on the PC for the Terminal app |
+| `tools/simtest/mock/` | Test-only stand-ins for Lichess and Open-Meteo (FOs has no backend) |
 | `tools/simtest/` | Headless simulator test scripts and screenshot output |
 | `test/` | CrossPoint host gtest suites (CMake) |
 
@@ -50,7 +51,7 @@ errors plus RAM/flash use.
 | Flash device | `.\tools\build.ps1 sticky -Target upload` |
 | Static analysis | `& $pio check -e sticky --skip-packages` |
 | Format | `.\bin\clang-format-fix.ps1 -g` (stage new files first: `-g` only sees tracked changes) |
-| Mock backend | `python tools\mock-backend\server.py` (http://127.0.0.1:8787) |
+| Terminal relay | `python tools\terminal-relay\relay.py --cwd <project>` |
 | Regenerate fonts / icons | `.venv\Scripts\python tools\fonts\build_fos_fonts.py` / `tools\icons\build_fos_icons.py` |
 
 A first simulator build compiles the whole firmware natively and takes 10+ minutes;
@@ -84,8 +85,9 @@ key wakes the device (the simulator relaunches itself as a child process).
 (`<ms>:<path>.png;...`). Scenarios are JSON files in `tools/simtest/scenarios/`; each run
 uses a fresh copy of `tools/simtest/sd/` as the SD card, plus the overlays named in `sd`
 (`{{date+N}}` / `{{unix-N}}` in overlay JSON are replaced with run-relative values).
-`"backend": 8799` runs the mock backend for the scenario (overlay `backend-8799`;
-`backend-down` points at a closed port). `after_wake` steps run in the process a
+`"mock": 8799` runs the test mock (Lichess, Open-Meteo) for the scenario; set
+`FOS_SIM_DIRECT_BASE` in its `env` to send public API calls there. `"relay": 8790` runs
+the terminal relay with its fake session. `after_wake` steps run in the process a
 deep-sleep wake relaunches; `FOS_SIM_WAKE_TIMER_MS` makes the lock screen's timed wake
 fire, and `FOS_SIM_CLIMATE="21.4,47"` (or `none`) sets the room sensor. **After any UI change, run the
 relevant scenarios and look at the PNGs before committing.**
@@ -139,12 +141,13 @@ relevant scenarios and look at the PNGs before committing.**
   icon size S 3Ã—5 / M 2Ã—4 / L 1Ã—4, labels, pages). Replaces CrossPoint's Home.
 - **Settings** (`src/fos/settings/`): `/fos/settings.json`, device-only, never synced.
   Settings can never be hidden.
-- **Sync** (`src/fos/sync/`): an optional HTTP backend (address + key from Settings > Accounts),
-  plus per-app fetchers with direct sources (`Direct.cpp`; Budgeteer's Google Sheet in
-  `BudgetStore.cpp`, script in `tools/google-sheets/`).
-  Each app caches its last copy under `/fos/<app>/`. Budgeteer keeps an offline queue.
-  `sync::begin()` runs at the end of `setup()`; screens reload caches when
-  `sync::generation()` changes.
+- **No backend.** `src/fos/net/` holds Wi-Fi and HTTP helpers for the services the device
+  calls directly: Lichess, the terminal relay and Open-Meteo. `src/fos/sync/` is a small
+  worker that runs per-app fetchers (today only the lock screen weather, `Weather.cpp`) and
+  keeps their last copy under `/fos/<app>/cache*.json`. `sync::begin()` runs at the end of
+  `setup()`; screens reload caches when `sync::generation()` changes.
+- **Retired apps**: Budgeteer, Calendar, Read-later, Flashcards and Puzzles were removed.
+  Their `AppId` values stay reserved (`AppInfo::retired`) so saved layouts keep their meaning.
 
 ## Conventions
 

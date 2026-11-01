@@ -1,0 +1,13 @@
+{
+  "description": "Lock screen weather fetched from Open-Meteo (test mock) for the place in Settings",
+  "sd": "lock-weather",
+  "env": {"FOS_SIM_DIRECT_BASE": "http://127.0.0.1:8799"},
+  "mock": 8799,
+  "steps": [
+    {"wait": 2000},
+    {"key": "DOWN"},
+    {"tap": [353, 175]},
+    {"wait": 4000},
+    {"shot": "fresh-weather"}
+  ]
+}

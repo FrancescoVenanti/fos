@@ -20,7 +20,7 @@ struct OnlineGame {
 
 namespace lichess {
 
-// FOs reaches Lichess directly (not through the backend) with the personal
+// FOs reaches Lichess directly with the personal
 // API token from Settings > Accounts. Requests block; callers show a loading
 // state first. Each joins Wi-Fi if needed.
 

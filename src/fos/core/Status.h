@@ -5,24 +5,17 @@
 
 namespace fos {
 
-enum class SyncState : uint8_t { Offline, Idle, Syncing, Error };
-
 // What the status bar shows on every screen.
 struct StatusInfo {
   char time[8] = "--:--";
   int battery = -1;  // percent, -1 = unknown
   bool charging = false;
   bool wifi = false;
-  SyncState sync = SyncState::Offline;
-  int pending = 0;         // queued entries waiting to sync
   bool timerDone = false;  // a timer ended and was not dismissed
 };
 
 StatusInfo currentStatus();
 
-// Called by the sync service.
-void setSyncState(SyncState state);
-void setPendingCount(int pending);
 // Called by the Timers app.
 void setTimerAlert(bool done);
 

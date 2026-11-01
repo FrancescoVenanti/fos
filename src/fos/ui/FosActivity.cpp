@@ -69,7 +69,7 @@ void FosActivity::loop() {
   // A timer that ends while another screen is open shows in the status bar.
   if (timers::poll()) refresh();
 
-  // Repaint the status bar when a sync starts or ends.
+  // Repaint the status bar (Wi-Fi icon) when a background fetch starts or ends.
   const uint32_t syncGen = sync::generation();
   const bool syncBusy = sync::busy();
   if (syncGen != syncGen_ || syncBusy != syncBusy_) {

@@ -1,1 +1,7 @@
-{"codes": [{"id": "local-1", "label": "Bike lock", "payload": "4006381333931", "format": "ean13"}]}
+{"codes": [
+ {"id": "local-1", "label": "Bike lock", "payload": "4006381333931", "format": "ean13"},
+ {"id": "local-2", "label": "Esselunga Fidaty", "payload": "2501234567898", "format": "ean13"},
+ {"id": "local-3", "label": "Gym membership", "payload": "FOS-GYM-000417", "format": "qr"},
+ {"id": "local-4", "label": "Train MI-TO 18:05", "payload": "TRENITALIA|PNR=QX7K2P|COACH=7|SEAT=42A|DATE={{date}}", "format": "qr"},
+ {"id": "local-5", "label": "Library card", "payload": "LIB-88213-MI", "format": "code128"}
+]}

@@ -2,7 +2,7 @@
   "description": "Settings: main menu, sections, text entry with the keyboard",
   "steps": [
     {"key": "DOWN"},
-    {"tap": [353, 640]},
+    {"tap": [123, 330]},
     {"shot": "main"},
     {"tap": [240, 153]},
     {"shot": "apps"},

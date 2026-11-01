@@ -2,7 +2,7 @@
   "description": "To-do: lists, complete, recurring advance, add with the keyboard, edit due and repeat, list filter, new list",
   "sd": "todo",
   "steps": [
-    {"tap": [353, 175]},
+    {"tap": [123, 175]},
     {"shot": "all"},
     {"tap": [34, 447]},
     {"shot": "milk-done"},

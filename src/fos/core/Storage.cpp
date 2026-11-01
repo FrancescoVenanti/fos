@@ -78,8 +78,7 @@ void clearSyncedCaches() {
       start = end + 1;
     }
   }
-  Storage.removeDir("/fos/readlater/articles");
-  LOG_INF("FOS", "Synced caches cleared");
+  LOG_INF("FOS", "Downloaded caches cleared");
 }
 
 void factoryReset() {

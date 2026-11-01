@@ -11,9 +11,10 @@ A scenario is tools/simtest/scenarios/<name>.json:
       "description": "Open Settings from the launcher",
       "boot_ms": 3000,          # time before the first step (default 3000)
       "settle_ms": 900,         # pause after each input (default 900)
-      "sd": "budget-online",    # optional overlay folder(s) in tools/simtest/sd-overlays/, in order
+      "sd": "lichess-8799",     # optional overlay folder(s) in tools/simtest/sd-overlays/, in order
       "env": {"FOS_SIM_NOW": "2026-10-26T09:41:00"},   # optional extra env vars
-      "backend": 8799,          # optional: run the mock backend on this port
+      "mock": 8799,             # optional: run the test mock (Lichess, Open-Meteo) on this port
+      "relay": 8790,            # optional: run the terminal relay (--fake) on this port
       "steps": [
         {"shot": "launcher"},
         {"tap": [240, 400]},
@@ -33,9 +34,11 @@ Each run starts from a fresh copy of tools/simtest/sd/ (plus the overlay) as
 the SD card. In overlay .json files, {{date}}, {{date+N}} and {{date-N}} become
 ISO dates relative to the day of the run, {{unix-N}} a Unix time N seconds ago
 and {{unixms+N}} one in milliseconds, so cached data and timers stay
-"current". With "backend", a fresh mock backend (tools/mock-backend) runs for
-the length of the scenario; point the overlay's settings at that port. Output:
-tools/simtest/out/<name>/NN-<shot>.png, sim.log and backend.log.
+"current". With "mock", tools/simtest/mock/server.py (stand-ins for Lichess and
+Open-Meteo) runs for the length of the scenario; with "relay", the terminal
+relay runs with its scripted fake session. Point the overlay's settings at
+those ports. Output: tools/simtest/out/<name>/NN-<shot>.png, sim.log, and
+mock.log / relay.log.
 
 Usage:
     python tools/simtest/run.py launcher
@@ -60,7 +63,8 @@ SCENARIOS = os.path.join(HERE, "scenarios")
 SD_TEMPLATE = os.path.join(HERE, "sd")
 SD_OVERLAYS = os.path.join(HERE, "sd-overlays")
 OUT = os.path.join(HERE, "out")
-BACKEND = os.path.join(REPO, "tools", "mock-backend", "server.py")
+MOCK = os.path.join(HERE, "mock", "server.py")
+RELAY = os.path.join(REPO, "tools", "terminal-relay", "relay.py")
 PROGRAM = os.path.join(REPO, ".pio", "build", "simulator", "program.exe" if os.name == "nt" else "program")
 
 
@@ -146,10 +150,10 @@ def prepare_sd(scenario, run_dir):
     return sd
 
 
-def start_backend(port, run_dir):
-    """Starts the mock backend and waits until it accepts connections."""
-    log = open(os.path.join(run_dir, "backend.log"), "w", encoding="utf-8", errors="replace")
-    proc = subprocess.Popen([sys.executable, "-u", BACKEND, "--port", str(port)], stdout=log,
+def start_server(args, port, log_name, run_dir):
+    """Starts a helper server and waits until it accepts connections."""
+    log = open(os.path.join(run_dir, log_name), "w", encoding="utf-8", errors="replace")
+    proc = subprocess.Popen([sys.executable, "-u"] + args + ["--port", str(port)], stdout=log,
                             stderr=subprocess.STDOUT, cwd=REPO)
     for _ in range(50):
         try:
@@ -161,7 +165,7 @@ def start_backend(port, run_dir):
             time.sleep(0.1)
     proc.kill()
     log.close()
-    raise RuntimeError("mock backend did not start on port %d (see backend.log)" % port)
+    raise RuntimeError("%s did not start on port %d (see %s)" % (args[0], port, log_name))
 
 
 def run(name):
@@ -197,14 +201,19 @@ def run(name):
         env["CROSSPOINT_SIM_INPUT_SCRIPT_AFTER_WAKE"] = wake[0]
         env["CROSSPOINT_SIM_SCREENSHOTS_AFTER_WAKE"] = wake[1]
 
-    backend = start_backend(int(scenario["backend"]), run_dir) if scenario.get("backend") else None
+    servers = []
     try:
+        if scenario.get("mock"):
+            servers.append(start_server([MOCK], int(scenario["mock"]), "mock.log", run_dir))
+        if scenario.get("relay"):
+            servers.append(start_server([RELAY, "--fake", "--no-key", "--host", "127.0.0.1", "--name", "test-pc"],
+                                        int(scenario["relay"]), "relay.log", run_dir))
         code = run_program(env, run_dir, inputs, shots, total_ms)
     finally:
-        if backend:
-            backend[0].terminate()
-            backend[0].wait(timeout=10)
-            backend[1].close()
+        for proc, log in servers:
+            proc.terminate()
+            proc.wait(timeout=10)
+            log.close()
 
     missing = [n for n in names if not os.path.isfile(os.path.join(run_dir, n))]
     status = "ok" if not missing and code in (0, "0") else "FAIL"

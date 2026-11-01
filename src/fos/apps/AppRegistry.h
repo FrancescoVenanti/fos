@@ -4,8 +4,9 @@
 
 namespace fos {
 
-// The sixteen FOs apps. The order is the default launcher order; values are
-// persisted in settings, so append only.
+// The FOs apps. The order is the default launcher order; values are persisted
+// in settings, so append only. Removed apps keep their value and are marked
+// retired (AppInfo::retired), so saved layouts keep their meaning.
 enum class AppId : uint8_t {
   Budgeteer = 0,
   Todo,
@@ -36,9 +37,12 @@ struct AppInfo {
   AppGroup group;
   bool usesNetwork;   // syncs or talks to a server when available
   bool needsNetwork;  // does not work offline (Terminal)
+  bool retired;       // removed from FOs: never listed or opened
 };
 
 const AppInfo& appInfo(AppId id);
+// False for retired apps.
+bool isAvailable(AppId id);
 const char* groupName(AppGroup group);
 
 }  // namespace fos

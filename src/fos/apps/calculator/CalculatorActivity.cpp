@@ -1,7 +1,5 @@
 #include "CalculatorActivity.h"
 
-#include <ArduinoJson.h>
-
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -10,7 +8,6 @@
 #include "CalcEngine.h"
 #include "fos/core/Json.h"
 #include "fos/core/Status.h"
-#include "fos/sync/Sync.h"
 
 namespace fos::calc {
 
@@ -21,11 +18,10 @@ namespace {
 
 constexpr char STATE_FILE[] = "/fos/calculator/state.json";
 constexpr const char* TABS[] = {"Calculator", "Convert"};
-constexpr const char* CATEGORIES[] = {"Length", "Weight", "Volume", "Temp", "Money"};
-// The pair each category opens on: m to ft, kg to lb, l to gal, C to F, EUR to the first rate.
-constexpr int DEFAULT_PAIR[5][2] = {{2, 5}, {1, 4}, {1, 7}, {0, 1}, {0, 1}};
-constexpr int CATEGORY_COUNT = 5;
-constexpr int CURRENCY = 4;
+constexpr const char* CATEGORIES[] = {"Length", "Weight", "Volume", "Temperature"};
+// The pair each category opens on: m to ft, kg to lb, l to gal, C to F.
+constexpr int DEFAULT_PAIR[4][2] = {{2, 5}, {1, 4}, {1, 7}, {0, 1}};
+constexpr int CATEGORY_COUNT = 4;
 constexpr int TEMPERATURE = 3;
 
 // Calculator keys, row by row.
@@ -128,8 +124,6 @@ void CalculatorActivity::onEnter() {
     to_ = DEFAULT_PAIR[0][1];
   }
   if (category_ < 0 || category_ >= CATEGORY_COUNT) category_ = 0;
-  seenGen_ = sync::generation();
-  sync::request(AppId::Calculator);  // fresh rates when online
   loadUnits();
   updateCalc();
   updateConvert();
@@ -275,7 +269,6 @@ void CalculatorActivity::drawCalculator(Canvas& c, Rect area) const {
 
 void CalculatorActivity::loadUnits() {
   units_.clear();
-  ratesNote_.clear();
   const auto add = [this](const UnitDef* defs, const size_t n) {
     for (size_t i = 0; i < n; ++i) units_.push_back({defs[i].name, defs[i].factor});
   };
@@ -292,21 +285,6 @@ void CalculatorActivity::loadUnits() {
     case TEMPERATURE:
       add(TEMPS, sizeof(TEMPS) / sizeof(TEMPS[0]));
       break;
-    default: {
-      JsonDocument doc;
-      if (loadJson(sync::cachePath(AppId::Calculator, "cache-rates").c_str(), doc)) {
-        units_.push_back({"EUR", 1});
-        for (JsonPairConst p : doc["data"]["rates"].as<JsonObjectConst>()) {
-          const double rate = p.value().as<double>();
-          if (rate > 0) units_.push_back({p.key().c_str(), rate});
-        }
-        const char* date = doc["data"]["date"] | "";
-        ratesNote_ = std::string("Rates of ") + date + ", updated at each sync";
-      } else {
-        ratesNote_ = "No rates yet: connect once to download them.";
-      }
-      break;
-    }
   }
   const int n = static_cast<int>(units_.size());
   if (from_ >= n) from_ = 0;
@@ -325,7 +303,6 @@ double CalculatorActivity::convert(const double value) const {
     if (b.name.back() == 'F') return celsius * 9 / 5 + 32;
     return celsius;
   }
-  if (category_ == CURRENCY) return value / a.factor * b.factor;
   return value * a.factor / b.factor;
 }
 
@@ -338,10 +315,6 @@ void CalculatorActivity::updateConvert() {
   valueText_ = (negative_ ? "\xE2\x88\x92" : "") + typed;
   if (units_.empty()) {
     resultText_ = "--";
-  } else if (category_ == CURRENCY) {
-    // Money: cents, grouped.
-    const double v = convert(value);
-    resultText_ = (v < 0 ? "â" : "") + formatDecimal(std::llround(std::fabs(v) * 100));
   } else {
     resultText_ = calc::formatNumber(convert(value));
   }
@@ -383,9 +356,6 @@ void CalculatorActivity::drawConverter(Canvas& c, Rect area) {
   figure(c, toRow.inset(BORDER + 12, 4), resultText_, Tone::White);
   area.takeTop(GAP);
 
-  if (!ratesNote_.empty()) {
-    c.textIn(area.takeTop(c.lineHeight(font::SMALL) + 4), font::SMALL, ratesNote_.c_str(), Tone::Dark);
-  }
   area.takeTop(GAP);
   keypad_.draw(c, area, VALUE_KEY);
 }
@@ -500,18 +470,6 @@ bool CalculatorActivity::onDown() {
   if (tab_ == 1) return false;
   tab_ = 1;
   return true;
-}
-
-void CalculatorActivity::onTick() {
-  // Fresh rates arrived.
-  const uint32_t gen = sync::generation();
-  if (gen == seenGen_ || sync::busy()) return;
-  seenGen_ = gen;
-  if (category_ == CURRENCY) {
-    loadUnits();
-    updateConvert();
-    refresh();
-  }
 }
 
 }  // namespace fos::calc

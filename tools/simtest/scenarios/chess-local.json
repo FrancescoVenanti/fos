@@ -1,8 +1,8 @@
 {
   "description": "Chess 1v1: saved game with clocks, promotion picker, promote to a knight, board turns",
-  "sd": ["backend-down", "chess-promotion"],
+  "sd": "chess-promotion",
   "steps": [
-    {"tap": [353, 640]},
+    {"tap": [353, 330]},
     {"tap": [240, 241]},
     {"shot": "resumed"},
     {"tap": [105, 253]},

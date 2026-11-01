@@ -1,7 +1,7 @@
 {
   "description": "To-do on a fresh SD card: one empty Inbox list",
   "steps": [
-    {"tap": [353, 175]},
+    {"tap": [123, 175]},
     {"shot": "empty"}
   ]
 }

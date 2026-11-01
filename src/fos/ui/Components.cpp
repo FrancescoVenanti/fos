@@ -71,24 +71,14 @@ void statusBar(Canvas& c, const StatusInfo& status) {
   x -= 34;
   wifiBars(c, x, iconY, status.wifi);
 
-  const char* sync = nullptr;
-  char buf[16];
+  // An ended timer is the one thing the bar flags.
   if (status.timerDone) {
-    sync = "TIME'S UP";
-  } else if (status.pending > 0) {
-    snprintf(buf, sizeof(buf), "%d TO SYNC", status.pending);
-    sync = buf;
-  } else if (status.sync == SyncState::Syncing) {
-    sync = "SYNCING";
-  } else if (status.sync == SyncState::Error) {
-    sync = "SYNC ERROR";
-  }
-  if (sync) {
-    const int w = c.textWidth(font::SMALL, sync, true) + 12;
+    const char* tagText = "TIME'S UP";
+    const int w = c.textWidth(font::SMALL, tagText, true) + 12;
     x -= w + 10;
     const Rect tag{x, iconY - 3, w, 22};
     c.fill(tag, Tone::Black);
-    c.textIn(tag, font::SMALL, sync, Tone::White, Align::Center, true);
+    c.textIn(tag, font::SMALL, tagText, Tone::White, Align::Center, true);
   }
 }
 

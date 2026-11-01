@@ -6,8 +6,8 @@
 #include <cstring>
 
 #include "ChessRules.h"
+#include "fos/net/Net.h"
 #include "fos/settings/FosSettings.h"
-#include "fos/sync/Backend.h"
 
 namespace fos::chess::lichess {
 namespace {

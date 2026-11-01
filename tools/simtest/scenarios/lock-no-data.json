@@ -1,6 +1,5 @@
 {
-  "description": "Lock screen with no synced data and no sensor",
-  "sd": "backend-down",
+  "description": "Lock screen with no weather place and no sensor",
   "env": {"FOS_SIM_CLIMATE": "none"},
   "steps": [
     {"key": "SLEEP"},

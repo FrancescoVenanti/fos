@@ -1,9 +1,7 @@
 {
   "description": "Calculator: (12+3)x4 with a live result, equals; converter categories, unit picker, currency without rates",
-  "sd": "backend-down",
   "steps": [
-    {"key": "DOWN"},
-    {"tap": [123, 330]},
+    {"tap": [353, 485]},
     {"tap": [176, 455]},
     {"tap": [64, 680]},
     {"tap": [176, 680]},

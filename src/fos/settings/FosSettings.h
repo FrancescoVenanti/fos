@@ -33,27 +33,17 @@ struct FosSettings {
   ClockStyle clockStyle = ClockStyle::Large;
   bool lockShowWeather = true;
   bool lockShowClimate = true;
-  bool lockShowNextEvent = true;
-  // Weather without the backend: a place name looked up on Open-Meteo (the
-  // sync worker keeps the coordinates in /fos/lockscreen/place.json).
+  // A place name looked up on Open-Meteo (the sync worker keeps the
+  // coordinates in /fos/lockscreen/place.json). Empty = no weather.
   std::string weatherPlace;
 
-  // Wi-Fi and sync. Saved networks live in CrossPoint's WifiCredentialStore
+  // Wi-Fi: saved networks live in CrossPoint's WifiCredentialStore
   // (/.crosspoint/wifi.json, passwords obfuscated); their order is the priority.
-  bool autoSync = true;
 
   // Accounts
   std::string lichessToken;
-  std::string lichessUrl = "https://lichess.org";  // a test server can stand in (tools/mock-backend /lichess)
-  std::string backendUrl;                          // empty = no backend: apps use their direct sources
-  std::string backendKey;
-  // Budgeteer reads and writes this Google Sheet through its Apps Script web
-  // app (tools/google-sheets). Empty = the backend.
-  std::string sheetUrl;
-  std::string sheetKey;
-  // Calendar without the backend: a secret iCal (.ics) address.
-  std::string calendarUrl;
-  // Terminal: the relay on the computer (tools/terminal-relay). Empty = the backend.
+  std::string lichessUrl = "https://lichess.org";  // tests point it at tools/simtest/mock
+  // Terminal: the relay on the computer (tools/terminal-relay).
   std::string terminalUrl;
   std::string terminalKey;
 

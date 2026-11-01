@@ -10,9 +10,9 @@ class GfxRenderer;
 
 namespace fos::lock {
 
-// The lock screen (docs/PRODUCT.md): clock, date, synced weather, room
-// climate from the on-board sensor and the next calendar event. It is not a
-// lock: there is no PIN. It is the sleep screen too; while the device sleeps a
+// The lock screen (docs/PRODUCT.md): clock, date, weather (Open-Meteo), room
+// climate from the on-board sensor and a running timer. It is not a lock:
+// there is no PIN. It is the sleep screen too; while the device sleeps a
 // timed wake redraws it every Settings > Lock screen > refresh interval.
 
 // Everything the screen shows, read once per refresh (never while drawing).
@@ -33,17 +33,12 @@ struct Snapshot {
   std::string roomTemp;
   std::string roomHumidity;  // "47% humidity"
 
-  // A running or ended timer replaces the next event: it is more urgent.
+  // A running or ended timer.
   bool hasTimer = false;
   bool timerDone = false;
   std::string timerLabel;  // "COUNTDOWN  ·  ENDS 20:45"
   std::string timerTitle;  // "Time's up" / "12 min left"
   std::string timerNote;   // "10:00 countdown ended at 20:45"
-
-  bool hasEvent = false;
-  std::string eventWhen;  // "TODAY 23:40"
-  std::string eventTitle;
-  std::string eventPlace;
 };
 
 void capture(Snapshot& out);
