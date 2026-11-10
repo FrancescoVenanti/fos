@@ -324,3 +324,13 @@ what was removed and are kept as history.
   listed, opened or counted. Moving an app in Settings steps over them.
 - **Tests:** `tools/simtest/mock/server.py` stands in for Lichess and Open-Meteo only; the
   runner's `"mock"` key starts it and `"relay"` starts the real relay with `--fake`.
+
+## D34 — Long press must not swallow taps
+On the device every tap failed: the pressed frame showed, the action never ran. The
+SDK reports a long press after 500 ms of stationary contact, and reading it through
+`MappedInputManager::wasScreenLongPress()` suppresses the rest of the contact,
+including the release that is the tap. On e-paper the pressed frame takes about half a
+second to appear, so people hold until they see it and most taps pass 500 ms. FOs
+screens now peek at the long press (`peekScreenLongPress()`) and suppress the contact
+only when the screen acts on it (`onLongPress()` returns true). The `slow-tap` scenario
+holds taps for 700 ms, as on the device; simulator taps used to last 80 ms.

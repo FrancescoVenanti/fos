@@ -71,6 +71,11 @@ class MappedInputManager {
   // the long-press opened. The SDK owns that latch and self-clears it once the
   // contact ends.
   bool wasScreenLongPress(int& x, int& y) const;
+  // FOs: the same long-press edge without suppressing the contact, so the
+  // release can still be a tap when the screen has no long-press action.
+  // Call suppressScreenContact() when the long press was used.
+  bool peekScreenLongPress(int& x, int& y) const;
+  void suppressScreenContact() const;
   bool isScreenTouchHeld(int& x, int& y) const;
   // Raw release edge, also true when the contact ended in a swipe or drag-off
   // (which wasScreenTapped never reports). InputSnapshot builders forward it

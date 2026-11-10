@@ -103,10 +103,14 @@ void FosActivity::loop() {
 
   int x = 0;
   int y = 0;
-  if (mappedInput.wasScreenLongPress(x, y)) {
+  // A long press cancels the tap only when the screen acts on it. On e-paper
+  // a normal tap is often held past the SDK's 500 ms long-press threshold
+  // while the pressed frame refreshes, so it must still tap on release.
+  if (mappedInput.peekScreenLongPress(x, y)) {
     const Hit* hit = liveHits_.find(x, y);
-    pressedAction_ = 0;
     if (hit && onLongPress(hit->action, hit->value)) {
+      mappedInput.suppressScreenContact();
+      pressedAction_ = 0;
       refresh();
       return;
     }

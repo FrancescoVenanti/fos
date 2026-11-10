@@ -1,0 +1,12 @@
+{
+  "description": "Taps held as long as on e-paper (700 ms) still act: open an app, use a button, turn the launcher page",
+  "steps": [
+    {"tap": [123, 485], "hold": 700},
+    {"shot": "timers-opened"},
+    {"tap": [389, 155], "hold": 700},
+    {"shot": "countdown-tab"},
+    {"key": "HOME"},
+    {"tap": [430, 746], "hold": 700},
+    {"shot": "launcher-page-2"}
+  ]
+}
