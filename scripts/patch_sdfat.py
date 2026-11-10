@@ -3,7 +3,8 @@ PlatformIO post: script: apply CrossPoint's SdFat patches via `git apply`.
 
 The patches in `scripts/sdfat_patches/` make USE_SEPARATE_FAT_CACHE
 overridable, invalidate the sector cache after a failed read, and write the
-FAT cache before the data cache on sync (see the file headers). They target
+FAT cache before the data cache on sync, and (FOs) retry SPI card transfers
+and re-initialize a card that bus traffic reset (see the file headers). They target
 SdFat 2.3.1 only.
 
 Unlike JPEGDEC, SdFat is a registry dependency of the SDK, so the script
@@ -35,6 +36,13 @@ PATCHES = (
     ("0003-sync-fat-before-data-cache.patch", "src/FatLib/FatPartition.h",
      "fb91c81beac2779a0d4b08e886a5fefdf8062b8ad422ccec4e178ae4e88b72e5",
      "10d66a5d2424ed9c6919a9dc65305ebd5854170bdeea29f4b7c70f57bee929af"),
+    # FOs: retry SPI card transfers and re-initialize a card reset by bus traffic.
+    ("0004-retry-spi-card-transfers-header.patch", "src/SdCard/SdSpiCard/SdSpiCard.h",
+     "deacae04ca185aac5731873ae969b0809509e26cd72c60d15ed725e6219e77dd",
+     "42428814e73404af0145f3606045f0321f9afb854e09b372fa1899d06252fcb6"),
+    ("0005-retry-spi-card-transfers.patch", "src/SdCard/SdSpiCard/SdSpiCard.cpp",
+     "5dd2aecc22249eae072b4ddefec174a28dcfa8a580b7dd436779ea7e4a175168",
+     "56fb60d324a054ac8c44cb63218d6f1e0ab625af980083750b0d2d720bab54cc"),
 )
 
 

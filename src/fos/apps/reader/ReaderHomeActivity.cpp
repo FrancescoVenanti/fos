@@ -44,24 +44,28 @@ void ReaderHomeActivity::onEnter() {
     books_.push_back(std::move(book));
   }
   recentCount_ = books_.size();
-  // Books on the card not opened yet: everything in /books the reader can open.
+  // Books on the card not opened yet: everything the reader can open in /books
+  // and at the top of the card (the web upload page starts there).
   std::vector<Book> fresh;
-  HalFile dir = Storage.open("/books");
-  if (dir && dir.isDirectory()) {
-    while (HalFile f = dir.openNextFile()) {
-      char name[256];
-      f.getName(name, sizeof(name));
-      const bool book = !f.isDirectory() && name[0] != '.' &&
-                        (FsHelpers::hasReflowableBookExtension(name) || FsHelpers::hasXtcExtension(name));
-      f.close();
-      if (!book) continue;
-      const std::string path = std::string("/books/") + name;
-      const bool known =
-          std::any_of(books_.begin(), books_.begin() + recentCount_, [&path](const Book& b) { return b.path == path; });
-      if (!known) fresh.push_back({path, fileTitle(path), "Not opened yet"});
+  for (const char* folder : {"/books", "/"}) {
+    HalFile dir = Storage.open(folder);
+    if (dir && dir.isDirectory()) {
+      const std::string prefix = std::string(folder) == "/" ? "/" : std::string(folder) + "/";
+      while (HalFile f = dir.openNextFile()) {
+        char name[256];
+        f.getName(name, sizeof(name));
+        const bool book = !f.isDirectory() && name[0] != '.' &&
+                          (FsHelpers::hasReflowableBookExtension(name) || FsHelpers::hasXtcExtension(name));
+        f.close();
+        if (!book) continue;
+        const std::string path = prefix + name;
+        const bool known = std::any_of(books_.begin(), books_.begin() + recentCount_,
+                                       [&path](const Book& b) { return b.path == path; });
+        if (!known) fresh.push_back({path, fileTitle(path), "Not opened yet"});
+      }
     }
+    if (dir) dir.close();
   }
-  if (dir) dir.close();
   std::sort(fresh.begin(), fresh.end(), [](const Book& a, const Book& b) { return a.title < b.title; });
   for (Book& b : fresh) books_.push_back(std::move(b));
   page_ = 0;

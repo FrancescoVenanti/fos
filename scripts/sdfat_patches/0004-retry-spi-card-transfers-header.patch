@@ -1,0 +1,31 @@
+Subject: [PATCH] SdSpiCard: retry failed transfers, then initialize the card again
+
+FOs: on the reTerminal Sticky the SD card shares its SPI bus with the e-paper
+panel, and its chip select does not isolate it, so the card sees display
+traffic as commands. With USE_SD_CRC it rejects nearly all of them, but the
+first transfer afterwards can still fail, and a stray reset leaves the card
+idle until it is initialized again. Retry a failed sector transfer once, then
+run begin() with the saved configuration and retry once more.
+
+---
+--- a/src/SdCard/SdSpiCard/SdSpiCard.h
++++ b/src/SdCard/SdSpiCard/SdSpiCard.h
+@@ -288,6 +288,18 @@ class SdSpiCard {
+   bool writeStop();
+ 
+  private:
++  // Single attempts behind the retrying public transfers.
++  bool readSectorsOnce(Sector_t sector, uint8_t* dst, size_t ns);
++  bool writeSectorOnce(Sector_t sector, const uint8_t* src);
++  bool writeSectorsOnce(Sector_t sector, const uint8_t* src, size_t ns);
++  // Recover after two failed attempts by initializing the card again.
++  bool reinitAfterFailure();
++  // SdSpiConfig has const members, so keep its fields.
++  SdCsPin_t m_reinitCsPin = 0;
++  uint8_t m_reinitOptions = 0;
++  uint32_t m_reinitMaxSck = 0;
++  SpiPort_t* m_reinitPort = nullptr;
++  bool m_reinitValid = false;
+   // private functions
+   uint8_t cardAcmd(uint8_t cmd, uint32_t arg) {
+     cardCommand(CMD55, 0);

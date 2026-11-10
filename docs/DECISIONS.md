@@ -334,3 +334,21 @@ second to appear, so people hold until they see it and most taps pass 500 ms. FO
 screens now peek at the long press (`peekScreenLongPress()`) and suppress the contact
 only when the screen acts on it (`onLongPress()` returns true). The `slow-tap` scenario
 holds taps for 700 ms, as on the device; simulator taps used to last 80 ms.
+
+## D35 — The Sticky's SD card hears the display
+Book uploads over Wi-Fi failed with "Failed to create file". The card worked at boot
+and broke at the first screen refresh: it shares the SPI bus (SCLK 13, MOSI 14,
+MISO 12) with the e-paper, and holding its chip select (GPIO8, or the free GPIO7 and
+GPIO11) high does not isolate it. Dummy SPI traffic with no refresh broke it the same
+way, so the card takes display bytes as commands and stops answering until it is
+initialized again. The stock firmware mounts it with ESP-IDF's sdspi driver, which turns
+CRC checking on. FOs does the same:
+- `-DUSE_SD_CRC=1` on the Sticky envs: the card rejects display bytes as bad commands.
+- SdFat patches 0004/0005 (`scripts/sdfat_patches/`): a failed sector read or write is
+  retried, then the card is initialized again (`begin()` with the saved config) and
+  retried once more. This covers the first transfer after display traffic and a stray
+  command that passes the CRC (for example a reset).
+Verified on the device: 640 KB write/read-back stress runs pass after refreshes and after
+8 KB of dummy bus traffic. The web upload page starts at the card root, so the Reader
+lists books there as well as in `/books`.
+

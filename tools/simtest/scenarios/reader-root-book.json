@@ -1,0 +1,8 @@
+{
+  "description": "Reader lists a book uploaded to the top of the card (the web upload page's start folder) next to /books",
+  "sd": ["reader-books", "reader-root-book"],
+  "steps": [
+    {"tap": [123, 330]},
+    {"shot": "home"}
+  ]
+}
