@@ -23,6 +23,7 @@ touch, microSD). It is a hard fork of [CrossPoint Reader](https://github.com/cro
 | `freeink-sdk/` | Submodule: board profiles (`BoardConfig.h` â†’ `STICKY`), drivers, FreeInkUI |
 | `sim/crosspoint-simulator/` | Vendored desktop simulator (MIT), ported to native Windows. Replaces `lib/hal` in the `simulator` env. Do not reformat it |
 | `tools/terminal-relay/` | Relay that runs Claude Code on the PC for the Terminal app |
+| `tools/usb-books/` | Copies books to the device over the USB cable (serial, see `src/fos/usb/`) |
 | `tools/simtest/mock/` | Test-only stand-ins for Lichess and Open-Meteo (FOs has no backend) |
 | `tools/simtest/` | Headless simulator test scripts and screenshot output |
 | `test/` | CrossPoint host gtest suites (CMake) |
@@ -52,6 +53,7 @@ errors plus RAM/flash use.
 | Static analysis | `& $pio check -e sticky --skip-packages` |
 | Format | `.\bin\clang-format-fix.ps1 -g` (stage new files first: `-g` only sees tracked changes) |
 | Terminal relay | `python tools\terminal-relay\relay.py --cwd <project>` |
+| Books over USB (device awake) | `python tools\usb-books\usb_books.py book.epub` (`--list`, `--delete NAME`) |
 | Regenerate fonts / icons | `.venv\Scripts\python tools\fonts\build_fos_fonts.py` / `tools\icons\build_fos_icons.py` |
 
 A first simulator build compiles the whole firmware natively and takes 10+ minutes;

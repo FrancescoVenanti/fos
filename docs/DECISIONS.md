@@ -352,3 +352,19 @@ Verified on the device: 640 KB write/read-back stress runs pass after refreshes 
 8 KB of dummy bus traffic. The web upload page starts at the card root, so the Reader
 lists books there as well as in `/books`.
 
+## D36 — Books over the USB cable
+The Sticky's USB-C port reaches the ESP32's UART0 through a CH343 serial bridge (the
+native USB pins, GPIO19/20, drive the microphone), so the card cannot show up as a drive.
+`src/fos/usb/UsbTransfer.cpp` listens on UART0 for `@fos` command lines and
+`tools/usb-books/usb_books.py` sends books with them: no Wi-Fi, no password, no reboot.
+Replies share the line with the log and are printed through the same ROM printer, so the
+PC skips every other line. The link runs at 921600 baud during a session. A file goes to
+`<path>.part` and replaces `<path>` only when its CRC-32 matches both as received and as
+read back from the card. A transfer holds full CPU speed and keeps the device awake;
+the device must be awake to answer, since nothing runs in deep sleep. Opening the port
+with DTR and RTS released does not reset the device.
+
+The SD clock drops from the SDK's 40 MHz to 20 MHz, the rate of the stock firmware's
+sdspi driver. A freshly formatted card took 2.6 s per directory entry at 40 MHz (every
+read failing and recovered by the D35 retries) and showed a folder as a 0-byte file; at
+20 MHz a listing takes 60 ms and a 2.7 MB book copies and verifies.

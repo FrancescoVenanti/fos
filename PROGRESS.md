@@ -24,7 +24,7 @@ Firmware size is reported for the `sticky` environment after each phase.
 
 ## Phase 4 — Hardware target
 - [x] `sticky` env builds (ESP32-S3); RAM/flash usage reported
-- [x] Runs on the device: taps fixed (D34), microSD survives display traffic (D35), books upload over Wi-Fi
+- [x] Runs on the device: taps fixed (D34), microSD survives display traffic (D35), books upload over Wi-Fi or the USB cable (D36)
 
 ## Phase 5 — FOs foundations
 - [x] Rebrand: boot screen, sleep screen, version string, About (credits CrossPoint), web page titles
@@ -74,3 +74,4 @@ Static RAM is of the 320 KB internal DRAM (8 MB PSRAM not counted); flash is of 
 | 7 (all apps) | 79,500 B (24.3%) | 5,738,619 B (87.6%) |
 | Debloat (no backend, 11 apps) | 79,252 B (24.2%) | 5,639,507 B (86.1%) |
 | SD CRC and retries, books in the card root | 79,268 B (24.2%) | 5,640,355 B (86.1%) |
+| Books over USB, 20 MHz SD clock | 83,972 B (25.6%) | 5,655,187 B (86.3%) |

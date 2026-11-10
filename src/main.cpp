@@ -50,6 +50,7 @@
 #include "fos/settings/FosSettings.h"
 #include "fos/sync/Sync.h"
 #include "fos/ui/Fonts.h"
+#include "fos/usb/UsbTransfer.h"
 #include "platform/UsbSerialJtagHandoff.h"
 #include "util/ButtonNavigator.h"
 #include "util/PluginEvents.h"
@@ -572,6 +573,12 @@ void setupDisplayAndFonts(bool seamless = false) {
 
 void setup() {
   BoardConfig::holdPowerRails();
+#if FREEINK_DEVICE_STICKY && !defined(SIMULATOR)
+  // FOs: the SD card shares a long SPI bus with the panel; 40 MHz (the SDK
+  // default) corrupts transfers on some cards. ESP-IDF's sdspi, which the stock
+  // firmware uses, runs at 20 MHz.
+  BoardConfig::ACTIVE.sd.spiHz = 20000000;
+#endif
 
 #ifdef ENABLE_SERIAL_LOG
 #ifdef CROSSPOINT_WAIT_FOR_USB_SERIAL
@@ -584,6 +591,7 @@ void setup() {
   logSerial.setTxTimeoutMs(1);  // This is a load-bearing 1. Do not modify.
 #endif
 #endif
+  fos::usb::begin();  // FOs: book transfer over the USB serial bridge
 
   HalSystem::begin();
   // checkPanic() clears the watchdog capture marker after a successful SD
@@ -954,8 +962,10 @@ void loop() {
 
   // Check for any user activity (button press or release) or active background work
   static unsigned long lastActivityTime = millis();
+  // FOs: serve the USB book transfer tool; a transfer keeps the device awake.
+  const bool usbActed = fos::usb::poll();
   if (gpio.wasAnyPressed() || gpio.wasAnyReleased() || gpio.wasTouchActivity() || halTiltSensor.hadActivity() ||
-      remoteActed || activityManager.preventAutoSleep()) {
+      remoteActed || usbActed || activityManager.preventAutoSleep()) {
     lastActivityTime = millis();         // Reset inactivity timer
     powerManager.setPowerSaving(false);  // Restore normal CPU frequency on user activity
   }
