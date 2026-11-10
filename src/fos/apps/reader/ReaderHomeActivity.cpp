@@ -91,7 +91,9 @@ bool ReaderHomeActivity::onDown() {
 
 void ReaderHomeActivity::draw(Canvas& c, const Rect& body) {
   Rect area = body;
-  header(c, area.takeTop(HEADER_H), "Reader", BACK);
+  // "Add books" opens CrossPoint's Wi-Fi file transfer (join a network or
+  // make a hotspot, then upload from a browser).
+  header(c, area.takeTop(HEADER_H), "Reader", BACK, "Add books", ADD_BOOKS);
   rule(c, 0, area.y, c.width());
   area.takeTop(BORDER + GAP);
 
@@ -103,9 +105,10 @@ void ReaderHomeActivity::draw(Canvas& c, const Rect& body) {
   area.takeBottom(GAP);
 
   if (books_.empty()) {
+    const Rect add = area.takeBottom(ACTION_H + GAP).inset(GUTTER, 0);
+    button(c, {add.x, add.y, add.w, ACTION_H}, "Add books over Wi-Fi", ADD_BOOKS, ButtonStyle::Primary, 0, font::TITLE);
     emptyState(c, area, "No books yet",
-               "Copy EPUB files to the books folder on the microSD card, or send them over Wi-Fi from the CrossPoint "
-               "file transfer page.");
+               "Send EPUB files from a browser over Wi-Fi, or copy them to the books folder of the microSD card.");
     return;
   }
 
@@ -169,6 +172,10 @@ void ReaderHomeActivity::onAction(const uint16_t action, const int16_t value) {
       return;
     case LIBRARY:
       activityManager.goToLibrary();
+      return;
+    case ADD_BOOKS:
+      // Replaces the stack, like opening a book: leaving it goes to the launcher.
+      activityManager.goToFileTransfer();
       return;
     case PREV_PAGE:
       if (onUp()) requestUpdate();

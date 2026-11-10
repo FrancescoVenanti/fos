@@ -23,7 +23,7 @@ class ReaderHomeActivity final : public ui::FosActivity {
   void onAction(uint16_t action, int16_t value) override;
 
  private:
-  enum Action : uint16_t { BACK = 1, OPEN, LIBRARY, FILES, PREV_PAGE, NEXT_PAGE };
+  enum Action : uint16_t { BACK = 1, OPEN, LIBRARY, FILES, PREV_PAGE, NEXT_PAGE, ADD_BOOKS };
 
   bool onUp() override;
   bool onDown() override;

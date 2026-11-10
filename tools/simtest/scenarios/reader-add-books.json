@@ -1,0 +1,10 @@
+{
+  "description": "Reader: 'Add books' opens the Wi-Fi file transfer (join a network or hotspot)",
+  "sd": "reader-books",
+  "steps": [
+    {"tap": [123, 330]},
+    {"shot": "reader"},
+    {"tap": [400, 76], "settle": 2500},
+    {"shot": "transfer-mode"}
+  ]
+}

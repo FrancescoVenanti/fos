@@ -1,0 +1,7 @@
+{
+  "description": "Reader on a card with no books: the Add books over Wi-Fi action",
+  "steps": [
+    {"tap": [123, 330]},
+    {"shot": "no-books"}
+  ]
+}
