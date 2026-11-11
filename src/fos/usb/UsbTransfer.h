@@ -22,6 +22,7 @@
 //                                back from the card. The PC may send the next
 //                                chunk before the previous ack (2 in flight).
 //   crc <file>                -> ok <size> <crc32> (read from the card) | err
+//   get <file>                -> x <hex> lines (128 bytes each), then end <size> <crc32>
 //   end                       -> ok
 
 namespace fos::usb {

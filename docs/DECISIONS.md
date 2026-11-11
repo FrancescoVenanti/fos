@@ -392,3 +392,13 @@ Verified on the device: four lockups during one Wi-Fi session were recovered, th
 credentials saved, and the 2.7 MB book uploaded in 5 s. The 40 MHz slowness blamed in
 D36 was most likely this lockup too; the 20 MHz clock stays (it matches the stock
 firmware) but is not the fix.
+Follow-up: the card also locks up with Wi-Fi off, while reading (likely the panel
+refresh's current draw). Opening the reader overlay at a chapter end read the chapter
+title from the book's metadata cache during a lockup; `serialization::readString`
+ignored the failed read, resized a string to the stray length and the firmware aborted.
+`readString(HalFile&)` now checks the read and bounds the length by the bytes left in
+the file, returning an empty string otherwise. Patch 0005 also escalates: if a transfer
+still fails after a successful `begin()`, the card is power-cycled anyway and the
+transfer tried a fourth time (before, two progress saves failed while the card accepted
+`begin()` but did not read). The USB receiver gained `get <file>` to read files such as
+`/crash_report.txt` off the card.

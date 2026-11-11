@@ -8,7 +8,9 @@ idle until it is initialized again. Retry a failed sector transfer once, then
 run begin() with the saved configuration and retry once more. Each failure is
 logged with the sector and the card error (ESP32: esp_rom_printf). When
 begin() fails too (the card ignores CMD0 after a brown-out), a weak
-sdfat_power_cycle_hook() lets the board cut the card's supply first.
+sdfat_power_cycle_hook() lets the board cut the card's supply first. If the
+transfer still fails after a successful begin(), the supply is cut anyway and
+the transfer tried a fourth time.
 
 ---
 --- a/src/SdCard/SdSpiCard/SdSpiCard.cpp
@@ -67,7 +69,7 @@ sdfat_power_cycle_hook() lets the board cut the card's supply first.
  #if ENABLE_DEDICATED_SPI
    if (sdState() != WRITE_STATE || m_curSector != sector) {
      if (!writeStart(sector)) {
-@@ -763,3 +776,66 @@ fail:
+@@ -763,3 +776,79 @@ fail:
    spiStop();
    return false;
  }
@@ -92,15 +94,28 @@ sdfat_power_cycle_hook() lets the board cut the card's supply first.
 +  }
 +  return sdfat_power_cycle_hook() && begin(config);
 +}
++// After the second failure initialize the card again (cutting its supply if that
++// fails); after the third, cut its supply anyway: a card can accept a new begin()
++// and still not read.
++bool SdSpiCard::recoverAfterFailure(uint8_t attempt) {
++  if (attempt == 1) {
++    return reinitAfterFailure();
++  }
++  if (attempt == 2 && m_reinitValid) {
++    return sdfat_power_cycle_hook() &&
++           begin(SdSpiConfig(m_reinitCsPin, m_reinitOptions, m_reinitMaxSck, m_reinitPort));
++  }
++  return attempt == 0;
++}
 +//------------------------------------------------------------------------------
 +bool SdSpiCard::readSectors(Sector_t sector, uint8_t* dst, size_t ns) {
-+  for (uint8_t attempt = 0; attempt < 3; attempt++) {
++  for (uint8_t attempt = 0; attempt < 4; attempt++) {
 +    if (readSectorsOnce(sector, dst, ns)) {
 +      return true;
 +    }
 +    SD_RETRY_LOG("read", sector, this);
-+    if (attempt == 1 && !reinitAfterFailure()) {
-+      SD_RETRY_LOG("reinit for", sector, this);
++    if (!recoverAfterFailure(attempt)) {
++      SD_RETRY_LOG("recovery for", sector, this);
 +      return false;
 +    }
 +  }
@@ -108,13 +123,13 @@ sdfat_power_cycle_hook() lets the board cut the card's supply first.
 +}
 +//------------------------------------------------------------------------------
 +bool SdSpiCard::writeSector(Sector_t sector, const uint8_t* src) {
-+  for (uint8_t attempt = 0; attempt < 3; attempt++) {
++  for (uint8_t attempt = 0; attempt < 4; attempt++) {
 +    if (writeSectorOnce(sector, src)) {
 +      return true;
 +    }
 +    SD_RETRY_LOG("write", sector, this);
-+    if (attempt == 1 && !reinitAfterFailure()) {
-+      SD_RETRY_LOG("reinit for", sector, this);
++    if (!recoverAfterFailure(attempt)) {
++      SD_RETRY_LOG("recovery for", sector, this);
 +      return false;
 +    }
 +  }
@@ -122,13 +137,13 @@ sdfat_power_cycle_hook() lets the board cut the card's supply first.
 +}
 +//------------------------------------------------------------------------------
 +bool SdSpiCard::writeSectors(Sector_t sector, const uint8_t* src, size_t ns) {
-+  for (uint8_t attempt = 0; attempt < 3; attempt++) {
++  for (uint8_t attempt = 0; attempt < 4; attempt++) {
 +    if (writeSectorsOnce(sector, src, ns)) {
 +      return true;
 +    }
 +    SD_RETRY_LOG("write", sector, this);
-+    if (attempt == 1 && !reinitAfterFailure()) {
-+      SD_RETRY_LOG("reinit for", sector, this);
++    if (!recoverAfterFailure(attempt)) {
++      SD_RETRY_LOG("recovery for", sector, this);
 +      return false;
 +    }
 +  }

@@ -10,7 +10,7 @@ run begin() with the saved configuration and retry once more.
 ---
 --- a/src/SdCard/SdSpiCard/SdSpiCard.h
 +++ b/src/SdCard/SdSpiCard/SdSpiCard.h
-@@ -288,6 +288,18 @@ class SdSpiCard {
+@@ -288,6 +288,19 @@ class SdSpiCard {
    bool writeStop();
  
   private:
@@ -20,6 +20,7 @@ run begin() with the saved configuration and retry once more.
 +  bool writeSectorsOnce(Sector_t sector, const uint8_t* src, size_t ns);
 +  // Recover after two failed attempts by initializing the card again.
 +  bool reinitAfterFailure();
++  bool recoverAfterFailure(uint8_t attempt);
 +  // SdSpiConfig has const members, so keep its fields.
 +  SdCsPin_t m_reinitCsPin = 0;
 +  uint8_t m_reinitOptions = 0;

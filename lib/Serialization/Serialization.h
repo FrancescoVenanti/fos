@@ -59,11 +59,19 @@ inline void readString(std::istream& is, std::string& s) {
   is.read(&s[0], len);
 }
 
+// FOs: a failed read (an SD card that stopped answering) used to leave stray bytes
+// in `len`, and resizing to them aborts the firmware. Bound it by the bytes left in
+// the file and return an empty string instead.
 inline void readString(HalFile& file, std::string& s) {
-  uint32_t len;
-  readPod(file, len);
+  uint32_t len = 0;
+  const bool gotLen = tryReadPod(file, len);
+  const int remaining = file.available();
+  if (!gotLen || remaining < 0 || len > static_cast<uint32_t>(remaining)) {
+    s.clear();
+    return;
+  }
   s.resize(len);
-  file.read(&s[0], len);
+  if (len != 0 && file.read(&s[0], len) != static_cast<int>(len)) s.clear();
 }
 
 inline bool tryReadString(HalFile& file, std::string& s, const size_t maxLength) {

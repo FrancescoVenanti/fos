@@ -39,10 +39,10 @@ PATCHES = (
     # FOs: retry SPI card transfers and re-initialize a card reset by bus traffic.
     ("0004-retry-spi-card-transfers-header.patch", "src/SdCard/SdSpiCard/SdSpiCard.h",
      "deacae04ca185aac5731873ae969b0809509e26cd72c60d15ed725e6219e77dd",
-     "42428814e73404af0145f3606045f0321f9afb854e09b372fa1899d06252fcb6"),
+     "83694f4d8551d7037ae1aecc1b2f669ca0d11ca6280d860fe0df726d723ff6bb"),
     ("0005-retry-spi-card-transfers.patch", "src/SdCard/SdSpiCard/SdSpiCard.cpp",
      "5dd2aecc22249eae072b4ddefec174a28dcfa8a580b7dd436779ea7e4a175168",
-     "466a640b8045c961053b468e58a72264db3f836b7a5ead47230e400d9bbe33fb"),
+     "1f0fee849e82970569198873c93cf5abc6b549b1bb9a4f7d324a538dabd67e55"),
 )
 
 

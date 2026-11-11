@@ -127,6 +127,32 @@ bool cardCrc(const char* path, uint32_t& crc, unsigned long& size) {
   return n == 0;
 }
 
+// Sends a file as "x <hex>" lines of up to 128 bytes, then "end <size> <crc32>".
+void get(const char* path) {
+  HalFile f;
+  if (!Storage.openFileForRead("USB", path, f) || f.isDirectory()) return reply("err cannot read");
+  HalPowerManager::Lock fullSpeed;
+  static const char HEX_DIGITS[] = "0123456789abcdef";
+  char hex[257];
+  uint8_t buf[128];
+  uint32_t crc = 0;
+  unsigned long total = 0;
+  int n;
+  while ((n = f.read(buf, sizeof(buf))) > 0) {
+    for (int i = 0; i < n; ++i) {
+      hex[2 * i] = HEX_DIGITS[buf[i] >> 4];
+      hex[2 * i + 1] = HEX_DIGITS[buf[i] & 15];
+    }
+    hex[2 * n] = '\0';
+    reply("x %s", hex);
+    crc = crc32Update(crc, buf, static_cast<size_t>(n));
+    total += static_cast<unsigned long>(n);
+  }
+  f.close();
+  if (n < 0) return reply("err read failed");
+  reply("end %lu %08lx", total, static_cast<unsigned long>(crc));
+}
+
 void put(char* args, bool replace) {
   char* end = nullptr;
   const unsigned long size = strtoul(args, &end, 10);
@@ -238,6 +264,9 @@ void handle(char* cmd) {
     reply("ok %lu %08lx", size, static_cast<unsigned long>(crc));
   } else if (strcmp(cmd, "put") == 0 || strcmp(cmd, "put!") == 0) {
     put(args ? args : const_cast<char*>(""), cmd[3] == '!');
+  } else if (strcmp(cmd, "get") == 0) {
+    if (!safePath(rest)) return reply("err bad path");
+    get(rest);
   } else if (strcmp(cmd, "end") == 0) {
     reply("ok");
     endSession();
