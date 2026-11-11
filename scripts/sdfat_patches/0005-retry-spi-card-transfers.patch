@@ -5,12 +5,30 @@ panel, and its chip select does not isolate it, so the card sees display
 traffic as commands. With USE_SD_CRC it rejects nearly all of them, but the
 first transfer afterwards can still fail, and a stray reset leaves the card
 idle until it is initialized again. Retry a failed sector transfer once, then
-run begin() with the saved configuration and retry once more.
+run begin() with the saved configuration and retry once more. Each failure is
+logged with the sector and the card error (ESP32: esp_rom_printf). When
+begin() fails too (the card ignores CMD0 after a brown-out), a weak
+sdfat_power_cycle_hook() lets the board cut the card's supply first.
 
 ---
 --- a/src/SdCard/SdSpiCard/SdSpiCard.cpp
 +++ b/src/SdCard/SdSpiCard/SdSpiCard.cpp
-@@ -128,6 +128,11 @@ bool SdSpiCard::begin(SdSpiConfig spiConfig) {
+@@ -23,6 +23,14 @@
+  * DEALINGS IN THE SOFTWARE.
+  */
+ #include "SdSpiCard.h"
++#if defined(ARDUINO_ARCH_ESP32)
++#include <esp_rom_sys.h>
++#define SD_RETRY_LOG(op, sector, card) \
++  esp_rom_printf("[SDFAT] %s sector %lu failed: error 0x%02X data 0x%02X\n", op, \
++                 static_cast<unsigned long>(sector), (card)->errorCode(), (card)->errorData())
++#else
++#define SD_RETRY_LOG(op, sector, card)
++#endif
+ //==============================================================================
+ namespace {  // Avoid conflict with another Timeout class.
+ class Timeout {
+@@ -128,6 +136,11 @@ bool SdSpiCard::begin(SdSpiConfig spiConfig) {
    uint8_t cardType;
    uint32_t arg;
    Timeout timeout;
@@ -22,7 +40,7 @@ run begin() with the saved configuration and retry once more.
    // Restore state to creator.
    initSharedSpiCard();
    m_errorCode = SD_CARD_ERROR_NONE;
-@@ -482,7 +487,7 @@ fail:
+@@ -482,7 +495,7 @@ fail:
  #endif
  }
  //------------------------------------------------------------------------------
@@ -31,7 +49,7 @@ run begin() with the saved configuration and retry once more.
  #if ENABLE_DEDICATED_SPI
    if (sdState() != READ_STATE || sector != m_curSector) {
      if (!readStart(sector)) {
-@@ -660,7 +665,7 @@ fail:
+@@ -660,7 +673,7 @@ fail:
    return false;
  }
  //------------------------------------------------------------------------------
@@ -40,7 +58,7 @@ run begin() with the saved configuration and retry once more.
  #ifndef OLD_WAY_WRITE_SECTOR
  #if ENABLE_DEDICATED_SPI
    if (m_dedicatedSpi) {
-@@ -701,7 +706,7 @@ fail:
+@@ -701,7 +714,7 @@ fail:
    return false;
  }
  //------------------------------------------------------------------------------
@@ -49,7 +67,7 @@ run begin() with the saved configuration and retry once more.
  #if ENABLE_DEDICATED_SPI
    if (sdState() != WRITE_STATE || m_curSector != sector) {
      if (!writeStart(sector)) {
-@@ -763,3 +768,48 @@ fail:
+@@ -763,3 +776,66 @@ fail:
    spiStop();
    return false;
  }
@@ -59,8 +77,20 @@ run begin() with the saved configuration and retry once more.
 +// almost all of them, but the first transfer afterwards can still fail, and a
 +// stray reset leaves the card idle until it is initialized again. Retry once,
 +// then initialize the card and retry once more.
++// A card that ignores CMD0 has locked up (brown-out) and only answers again after
++// its supply is cut. The board may provide this hook to power-cycle the card;
++// it returns false when it cannot.
++extern "C" __attribute__((weak)) bool sdfat_power_cycle_hook() { return false; }
++
 +bool SdSpiCard::reinitAfterFailure() {
-+  return m_reinitValid && begin(SdSpiConfig(m_reinitCsPin, m_reinitOptions, m_reinitMaxSck, m_reinitPort));
++  if (!m_reinitValid) {
++    return false;
++  }
++  const SdSpiConfig config(m_reinitCsPin, m_reinitOptions, m_reinitMaxSck, m_reinitPort);
++  if (begin(config)) {
++    return true;
++  }
++  return sdfat_power_cycle_hook() && begin(config);
 +}
 +//------------------------------------------------------------------------------
 +bool SdSpiCard::readSectors(Sector_t sector, uint8_t* dst, size_t ns) {
@@ -68,7 +98,9 @@ run begin() with the saved configuration and retry once more.
 +    if (readSectorsOnce(sector, dst, ns)) {
 +      return true;
 +    }
++    SD_RETRY_LOG("read", sector, this);
 +    if (attempt == 1 && !reinitAfterFailure()) {
++      SD_RETRY_LOG("reinit for", sector, this);
 +      return false;
 +    }
 +  }
@@ -80,7 +112,9 @@ run begin() with the saved configuration and retry once more.
 +    if (writeSectorOnce(sector, src)) {
 +      return true;
 +    }
++    SD_RETRY_LOG("write", sector, this);
 +    if (attempt == 1 && !reinitAfterFailure()) {
++      SD_RETRY_LOG("reinit for", sector, this);
 +      return false;
 +    }
 +  }
@@ -92,7 +126,9 @@ run begin() with the saved configuration and retry once more.
 +    if (writeSectorsOnce(sector, src, ns)) {
 +      return true;
 +    }
++    SD_RETRY_LOG("write", sector, this);
 +    if (attempt == 1 && !reinitAfterFailure()) {
++      SD_RETRY_LOG("reinit for", sector, this);
 +      return false;
 +    }
 +  }

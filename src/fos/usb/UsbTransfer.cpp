@@ -77,7 +77,7 @@ bool safePath(const char* path) {
   return strlen(path) < 256;
 }
 
-void list(const char* dir) {
+void list(const char* dir, bool all) {
   HalFile d = Storage.open(dir);
   if (!d || !d.isDirectory()) {
     reply("err not a folder");
@@ -86,7 +86,8 @@ void list(const char* dir) {
   char name[256];
   while (HalFile f = d.openNextFile()) {
     f.getName(name, sizeof(name));
-    if (name[0] != '.') reply("%c %u %s", f.isDirectory() ? 'd' : 'f', f.isDirectory() ? 0u : (unsigned)f.size(), name);
+    if (all || name[0] != '.')
+      reply("%c %u %s", f.isDirectory() ? 'd' : 'f', f.isDirectory() ? 0u : (unsigned)f.size(), name);
     f.close();
   }
   d.close();
@@ -212,7 +213,9 @@ void handle(char* cmd) {
     setBaud(baud);
     fastBaud = baud != BASE_BAUD;
   } else if (strcmp(cmd, "ls") == 0) {
-    list(rest[0] ? rest : "/");
+    const bool all = strncmp(rest, "-a", 2) == 0;
+    const char* dir = all ? rest + 2 + (rest[2] == ' ') : rest;
+    list(dir[0] ? dir : "/", all);
   } else if (strcmp(cmd, "mkdir") == 0) {
     if (!safePath(rest)) return reply("err bad path");
     reply(Storage.exists(rest) || Storage.mkdir(rest) ? "ok" : "err cannot create folder");

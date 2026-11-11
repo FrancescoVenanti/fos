@@ -42,7 +42,7 @@ PATCHES = (
      "42428814e73404af0145f3606045f0321f9afb854e09b372fa1899d06252fcb6"),
     ("0005-retry-spi-card-transfers.patch", "src/SdCard/SdSpiCard/SdSpiCard.cpp",
      "5dd2aecc22249eae072b4ddefec174a28dcfa8a580b7dd436779ea7e4a175168",
-     "56fb60d324a054ac8c44cb63218d6f1e0ab625af980083750b0d2d720bab54cc"),
+     "466a640b8045c961053b468e58a72264db3f836b7a5ead47230e400d9bbe33fb"),
 )
 
 

@@ -9,7 +9,8 @@
 //   hello                     -> ok FOs-usb 1
 //   baud <rate>               -> ok, then both ends switch (back to 115200 on "end"
 //                                or after 30 s without a command)
-//   ls <dir>                  -> f <size> <name> / d 0 <name> lines, then end
+//   ls [-a] <dir>             -> f <size> <name> / d 0 <name> lines, then end
+//                                (-a also lists hidden entries)
 //   mkdir <dir>               -> ok | err <reason>
 //   rm <file>                 -> ok | err <reason>   (files only)
 //   put <size> <crc32> <path> -> ready, then the PC sends raw bytes in 4096-byte

@@ -48,6 +48,7 @@
 #include "fos/apps/AppLauncher.h"
 #include "fos/apps/lock/LockScreen.h"
 #include "fos/settings/FosSettings.h"
+#include "fos/storage/SdMount.h"
 #include "fos/sync/Sync.h"
 #include "fos/ui/Fonts.h"
 #include "fos/usb/UsbTransfer.h"
@@ -650,7 +651,7 @@ void setup() {
 
   // SD Card Initialization
   // We need 6 open files concurrently when parsing a new chapter
-  if (!Storage.begin()) {
+  if (!fos::sdcard::mount()) {  // FOs: retries with a power cycle, logs why it failed
     LOG_ERR("MAIN", "SD card initialization failed");
     setupDisplayAndFonts(isSilentReboot);
     activityManager.goToFullScreenMessage("SD card error", EpdFontFamily::BOLD);

@@ -368,3 +368,27 @@ The SD clock drops from the SDK's 40 MHz to 20 MHz, the rate of the stock firmwa
 sdspi driver. A freshly formatted card took 2.6 s per directory entry at 40 MHz (every
 read failing and recovered by the D35 retries) and showed a folder as a 0-byte file; at
 20 MHz a listing takes 60 ms and a 2.7 MB book copies and verifies.
+
+## D37 — Power-cycle a microSD card that locks up
+With Wi-Fi on, the Sticky's card sometimes stops answering entirely: reads time out with
+the data line idle (SdFat READ_TIMEOUT, data 0xFF), re-initialization fails at ACMD41,
+and then the card ignores even CMD0. It happens on the first access after a quiet spell
+(after the radio starts, after joining, on the first web listing), never with the radio
+off. Screen redraws during card writes, scanning at any transmit power, and a 13 dBm cap
+on a real connection did not prevent it, so the trigger is not pinned down. Only cutting
+the card's supply (SD_PWR_EN, GPIO10, a TPS22916 load switch) brings it back. Before
+this, a locked card failed every later operation: settings and Wi-Fi credentials were
+not saved, uploads stopped at the start, the next boot showed "SD card error", and a
+card that locked up mid-write lost its root directory (a copied book vanished).
+- SdFat patch 0005 logs every failed transfer (sector, SdFat error, card data byte) on
+  the UART and, when `begin()` fails, calls a weak `sdfat_power_cycle_hook()`.
+  `src/fos/storage/SdMount.cpp` provides it: supply off for 300 ms with CS low, on again,
+  then SdFat initializes the card and repeats the transfer. A recovery costs about 3 s
+  and is logged as "Card stopped answering; power-cycled it".
+- `fos::sdcard::mount()` replaces the single mount attempt in `setup()`: up to three
+  attempts with a power cycle between them, and if all fail, read-only probes log why
+  (card silent, no partition table, or no FAT/exFAT boot sector).
+Verified on the device: four lockups during one Wi-Fi session were recovered, the Wi-Fi
+credentials saved, and the 2.7 MB book uploaded in 5 s. The 40 MHz slowness blamed in
+D36 was most likely this lockup too; the 20 MHz clock stays (it matches the stock
+firmware) but is not the fix.
